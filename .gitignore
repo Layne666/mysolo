@@ -1,0 +1,12 @@
+src/main/webapp/markdowns/*
+!src/main/webapp/markdowns/README.md
+
+target/
+node_modules/
+**/.DS_store
+.idea/
+solo.iml
+*.log
+/.settings/
+/.classpath
+/.project
