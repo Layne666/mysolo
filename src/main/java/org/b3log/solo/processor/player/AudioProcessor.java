@@ -1,11 +1,9 @@
 package org.b3log.solo.processor.player;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.b3log.latke.logging.Logger;
 import org.b3log.latke.servlet.RequestContext;
 import org.b3log.latke.servlet.annotation.RequestProcessing;
@@ -27,11 +25,12 @@ public class AudioProcessor {
 	 */
 	@RequestProcessing(value = "/getAudio")
 	public void getAudio(final RequestContext context) {
-		InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream("/playlist.json");
+		//InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream("/playlist.json");
 		String json = null;
 		try {
 			List<Audio> list = new ArrayList<>();
-			String content = IOUtils.toString(resourceAsStream, "UTF-8");
+			//String content = IOUtils.toString(resourceAsStream, "UTF-8");
+			String content = SendGetRequestUtils.sendGET("http://music.163.com/api/playlist/detail", "id=2652030925");
 			JSONObject obj = JSONObject.fromObject(content);
 			JSONArray array = obj.getJSONObject("result").getJSONArray("tracks");
 			if (array.size() > 0) {
