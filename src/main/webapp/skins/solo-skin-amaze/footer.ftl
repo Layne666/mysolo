@@ -21,8 +21,9 @@
     <div class="blog-text-center">
         &copy; ${year}
         ${footerContent}
-        <a data-pjax href="${servePath}">${blogTitle}</a>  &nbsp;   â¢ &nbsp;
-        <a href="https://solo.b3log.org" target="_blank">Solo</a> ${version}  <br/>
+        <a href="${servePath}">${blogTitle}</a>  &nbsp;•&nbsp;
+        <a href="https://solo.b3log.org" target="_blank">Solo</a> ${version} &nbsp;•&nbsp;
+        Powered by <a href="https://b3log.org" target="_blank">B3log</a> 开源 &nbsp;
     </div>
 </footer>
 <div class="cd-top" onclick="Util.goTop()"></div>
@@ -33,19 +34,19 @@
 	    $(window).scroll(function(){  
             p = $(this).scrollTop(); 
             var b = $(".navbar-custom").height();
-            //回到顶部
+            //åå°é¡¶é¨
             if ($(window).scrollTop() > 150) {
     	        $(".cd-top").fadeIn(100);
     	    } else {
     	        $(".cd-top").fadeOut(100);
     	    }
-            //导航栏
-            if (t <= p) {//下滚  
+            //å¯¼èªæ 
+            if (t <= p) {//ä¸æ»  
             	$(".navbar-custom").removeClass("is-visible");
                 if (p > b && !$(".navbar-custom").hasClass("is-fixed")) {
                     $(".navbar-custom").addClass("is-fixed")
                 }
-            } else{//上滚  
+            } else{//ä¸æ»  
                 if (p > 0 && $(".navbar-custom").hasClass("is-fixed")) {
                     $(".navbar-custom").addClass("is-visible")
                 } else {
