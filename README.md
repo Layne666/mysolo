@@ -46,15 +46,9 @@
 * CDN 静态资源分离
 * [GitHub 集成](https://github.com/b3log/solo/issues/12514)
 
-## 界面
+## 我的界面
 
-### 编辑文章
-
-![5f7258675e0143c79e15ddffabf02147-article.png](https://img.hacpai.com/file/2017/8/5f7258675e0143c79e15ddffabf02147-article.png) 
-
-### 选择皮肤
-
-![ac9a044c18ec4dd4a9356caf698d7fe8-skin.png](https://img.hacpai.com/file/2017/8/ac9a044c18ec4dd4a9356caf698d7fe8-skin.png) 
+![QQ20190208152455png](http://file.layne666.site//file/2019/02/88d6056838c9427cafa166b47a804a8c_QQ20190208152455.png) 
 
 ### 前台界面
 
