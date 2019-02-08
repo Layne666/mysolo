@@ -95,6 +95,6 @@ public class QiniuOssService implements OssService {
             throw new Exception(ERR_MSG);
         }
 
-        return qiniu.optString(Option.ID_C_QINIU_DOMAIN) + "/" + fileName;
+        return qiniu.optString(Option.ID_C_QINIU_DOMAIN) + fileName;
     }
 }
