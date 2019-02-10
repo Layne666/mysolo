@@ -8,6 +8,7 @@ import org.b3log.latke.logging.Logger;
 import org.b3log.latke.servlet.RequestContext;
 import org.b3log.latke.servlet.annotation.RequestProcessing;
 import org.b3log.latke.servlet.annotation.RequestProcessor;
+import org.b3log.solo.util.Solos;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -30,7 +31,7 @@ public class AudioProcessor {
 		try {
 			List<Audio> list = new ArrayList<>();
 			//String content = IOUtils.toString(resourceAsStream, "UTF-8");
-			String content = SendGetRequestUtils.sendGET("http://music.163.com/api/playlist/detail", "id=2652030925");
+			String content = SendGetRequestUtils.sendGET("http://music.163.com/api/playlist/detail", "id="+Solos.MUSIC_163_PLAYLIST);
 			JSONObject obj = JSONObject.fromObject(content);
 			JSONArray array = obj.getJSONObject("result").getJSONArray("tracks");
 			if (array.size() > 0) {

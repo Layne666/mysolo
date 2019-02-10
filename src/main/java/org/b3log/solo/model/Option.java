@@ -559,7 +559,12 @@ public final class Option {
          * Default editor type.
          */
         public static final String DEFAULT_EDITOR_TYPE = "CodeMirror-Markdown";
-
+        
+        /**
+         * Default music playlist id.
+         */
+        public static final String DEFAULT_MUSIC_163_PLAYLIST = "2652030925";
+        
         /**
          * Logger.
          */

@@ -125,6 +125,11 @@ public final class Solos {
      * Cookie HTTP only.
      */
     public static final boolean COOKIE_HTTP_ONLY;
+    
+    /**
+     * Music 163 playlist id.
+     */
+    public static final String MUSIC_163_PLAYLIST;
 
     static {
         ResourceBundle solo;
@@ -151,6 +156,15 @@ public final class Solos {
             LOGGER.log(Level.WARN, "Loads [mobile.skin] in solo.props failed [" + e.getMessage() + "], using [" + mobileSkin + "] as the default mobile skin");
         }
         MOBILE_SKIN = mobileSkin;
+        
+        //music.163.com 
+        String playlist = Option.DefaultPreference.DEFAULT_MUSIC_163_PLAYLIST;
+        try {
+        	playlist = solo.getString("music.163.playlist");
+        } catch (final Exception e) {
+            LOGGER.log(Level.WARN, "Loads [music.163.playlist] in solo.props failed [" + e.getMessage() + "], using default playlist");
+        }
+        MUSIC_163_PLAYLIST=playlist;
     }
 
     static {
