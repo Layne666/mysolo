@@ -17,20 +17,16 @@
  */
 package org.b3log.solo.model;
 
-import org.apache.commons.lang.StringUtils;
 import org.b3log.latke.Keys;
-import org.b3log.latke.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.Set;
 
 /**
  * This class defines option model relevant keys.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="https://github.com/hzchendou">hzchendou</a>
- * @version 1.5.0.1, Jan 28, 2019
+ * @version 1.5.0.3, Feb 8, 2019
  * @since 0.6.0
  */
 public final class Option {
@@ -60,51 +56,6 @@ public final class Option {
      * Key of custom vars.
      */
     public static final String ID_C_CUSTOM_VARS = "customVars";
-
-    /**
-     * Key of cloud object storage service (公有云对象存储服务提供商).
-     */
-    public static final String ID_C_CLOUD_STORAGE_KEY = "ossServer";
-
-    /**
-     * Key of Qiniu access key.
-     */
-    public static final String ID_C_QINIU_ACCESS_KEY = "qiniuAccessKey";
-
-    /**
-     * Key of Qiniu secret key.
-     */
-    public static final String ID_C_QINIU_SECRET_KEY = "qiniuSecretKey";
-
-    /**
-     * Key of Qiniu domain.
-     */
-    public static final String ID_C_QINIU_DOMAIN = "qiniuDomain";
-
-    /**
-     * Key of Qiniu bucket.
-     */
-    public static final String ID_C_QINIU_BUCKET = "qiniuBucket";
-
-    /**
-     * key of Aliyun access key
-     */
-    public static final String ID_C_ALIYUN_ACCESS_KEY = "aliyunAccessKey";
-
-    /**
-     * Key of Aliyun secret key.
-     */
-    public static final String ID_C_ALIYUN_SECRET_KEY = "aliyunSecretKey";
-
-    /**
-     * key of Aliyun domain
-     */
-    public static final String ID_C_ALIYUN_DOMAIN = "aliyunDomain";
-
-    /**
-     * key of Aliyun bucket
-     */
-    public static final String ID_C_ALIYUN_BUCKET = "aliyunBucket";
 
     /**
      * Key of blog title.
@@ -212,11 +163,6 @@ public final class Option {
     public static final String ID_C_SIGNS = "signs";
 
     /**
-     * Key of key of Solo.
-     */
-    public static final String ID_C_KEY_OF_SOLO = "keyOfSolo";
-
-    /**
      * Key of allow visit draft via permalink.
      */
     public static final String ID_C_ALLOW_VISIT_DRAFT_VIA_PERMALINK = "allowVisitDraftViaPermalink";
@@ -267,19 +213,6 @@ public final class Option {
     public static final String ID_C_FEED_OUTPUT_CNT = "feedOutputCnt";
 
     /**
-     * Key of editor type.
-     * <p>
-     * Optional values:
-     * <ul>
-     * <li>"tinyMCE"</li>
-     * <li>"CodeMirror-Markdown"</li>
-     * <li>"KindEditor"</li>
-     * </ul>
-     * </p>
-     */
-    public static final String ID_C_EDITOR_TYPE = "editorType";
-
-    /**
      * Key of skins.
      */
     public static final String ID_C_SKINS = "skins";
@@ -315,31 +248,11 @@ public final class Option {
     public static final String ID_C_STATISTIC_BLOG_VIEW_COUNT = "statisticBlogViewCount";
 
     /**
-     * Key of oauth GitHub.
-     */
-    public static final String ID_C_OAUTH_GITHUB = "oauthGitHub";
-
-    /**
      * Key of GitHub repos.
      */
     public static final String ID_C_GITHUB_REPOS = "githubRepos";
 
     // Category constants
-    /**
-     * Category - Qiniu.
-     */
-    public static final String CATEGORY_C_QINIU = "qiniu";
-
-    /**
-     * Category - Aliyun
-     */
-    public static final String CATEGORY_C_ALIYUN = "aliyun";
-
-    /**
-     * Category - Cloud object storage
-     */
-    public static final String CATEGORY_C_CLOU_STORAGE = "cloudStorage";
-
     /**
      * Category - Preference.
      */
@@ -349,11 +262,6 @@ public final class Option {
      * Category - Statistic.
      */
     public static final String CATEGORY_C_STATISTIC = "statistic";
-
-    /**
-     * Category - OAuth.
-     */
-    public static final String CATEGORY_C_OAUTH = "oauth";
 
     /**
      * Category - GitHub.
@@ -372,23 +280,6 @@ public final class Option {
     public static final String ID_T_STATISTIC_PUBLISHED_BLOG_COMMENT_COUNT = "statisticPublishedBlogCommentCount";
 
     /**
-     * Gets oauth pair str from the specified oauth pairs with the specified open id.
-     *
-     * @param oauthPairs     the specified oauth pairs
-     * @param openIdOrUserId the specified open id
-     * @return oauth pair str, returns {@code null} if not found
-     */
-    public static String getOAuthPair(final Set<String> oauthPairs, final String openIdOrUserId) {
-        for (final String pair : oauthPairs) {
-            if (StringUtils.containsIgnoreCase(pair, openIdOrUserId)) {
-                return pair;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Private constructor.
      */
     private Option() {
@@ -398,7 +289,7 @@ public final class Option {
      * Default preference.
      *
      * @author <a href="http://88250.b3log.org">Liang Ding</a>
-     * @version 2.2.0.0, Dec 10, 2018
+     * @version 2.2.0.1, Feb 17, 2019
      * @since 0.3.1
      */
     public static final class DefaultPreference {
@@ -447,6 +338,11 @@ public final class Option {
          * Default skin directory name.
          */
         public static final String DEFAULT_SKIN_DIR_NAME = "Jane";
+        
+        /**
+         * Default music playlist id.
+         */
+        public static final String DEFAULT_MUSIC_163_PLAYLIST = "2652030925";
 
         /**
          * Default language.
@@ -503,7 +399,7 @@ public final class Option {
         /**
          * Default external relevant articles display count.
          */
-        public static final int DEFAULT_EXTERNAL_RELEVANT_ARTICLES_DISPLAY_COUNT = 5;
+        public static final int DEFAULT_EXTERNAL_RELEVANT_ARTICLES_DISPLAY_COUNT = 0;
 
         /**
          * Most view articles display count.
@@ -554,21 +450,6 @@ public final class Option {
          * Default feed output entry count.
          */
         public static final int DEFAULT_FEED_OUTPUT_CNT = 10;
-
-        /**
-         * Default editor type.
-         */
-        public static final String DEFAULT_EDITOR_TYPE = "CodeMirror-Markdown";
-        
-        /**
-         * Default music playlist id.
-         */
-        public static final String DEFAULT_MUSIC_163_PLAYLIST = "2652030925";
-        
-        /**
-         * Logger.
-         */
-        private static final Logger LOGGER = Logger.getLogger(DefaultPreference.class);
 
         static {
             final JSONArray signs = new JSONArray();

@@ -38,9 +38,12 @@ var Skin = {
         'max-width': '968px',
         'padding-right': '270px',
       })
+    } else {
+      $('#pjax.wrapper').removeAttr('style')
     }
   },
   init: function () {
+    Skin.initToc()
     Util.initPjax(function () {
       $('.header a').each(function () {
         if (this.href === location.href) {
@@ -50,14 +53,7 @@ var Skin = {
         }
       })
 
-      if ($('.b3-solo-list li').length > 0 && $(window).width() > 768) {
-        $('#pjax.wrapper').css({
-          'max-width': '968px',
-          'padding-right': '270px',
-        })
-      } else {
-        $('#pjax.wrapper').removeAttr('style')
-      }
+      Skin.initToc()
     })
 
     $('.header a').each(function () {

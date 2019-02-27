@@ -32,7 +32,7 @@ var MetroHot = {
         // logout
         var logoutHref = "";
         $("#admin a").each(function() {
-            if ($(this).attr("href").indexOf("/logout?goto=") > -1) {
+            if ($(this).attr("href").indexOf("/logout") > -1) {
                 logoutHref = $(this).attr("href");
             }
         });
@@ -118,7 +118,7 @@ var MetroHot = {
                     $(".side > div").css("position", "static");
                 }
             } else {
-                if (y + Util.getWinHeight() > $(".side > div").height() + MetroHot.headerH) {
+                if (y + $(window).height() > $(".side > div").height() + MetroHot.headerH) {
                     $(".side > div").css({
                         "position": "fixed",
                         "top": "auto",
@@ -175,7 +175,7 @@ var MetroHot = {
     share: function() {
         var title = encodeURIComponent($("title").text()),
                 url = window.location.href,
-                pic = $(".article-body img").attr("src");
+                pic = $(".content-reset img").attr("src");
         var urls = {};
         urls.tencent = "http://share.v.t.qq.com/index.php?c=share&a=index&title=" + title +
                 "&url=" + url + "&pic=" + pic;

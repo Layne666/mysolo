@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
     <head>
@@ -30,12 +31,12 @@
     <body class="classic-wptouch-bg ">
         <#include "header.ftl">
         <div class="content single">
-            <div class="post article-body">
+            <div class="post content-reset">
                 ${page.pageContent}
             </div>
             <@comments commentList=pageComments article=page></@comments>
         </div>
         <#include "footer.ftl">
-        <@comment_script oId=page.oId></@comment_script>
+        <@comment_script oId=page.oId commentable=page.commentable></@comment_script>
     </body>
 </html>

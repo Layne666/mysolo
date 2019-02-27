@@ -24,12 +24,15 @@ import org.b3log.latke.logging.Level;
 import org.b3log.latke.logging.Logger;
 import org.b3log.latke.model.Pagination;
 import org.b3log.latke.model.User;
+import org.b3log.latke.repository.FilterOperator;
+import org.b3log.latke.repository.PropertyFilter;
 import org.b3log.latke.repository.Query;
 import org.b3log.latke.repository.RepositoryException;
 import org.b3log.latke.service.ServiceException;
 import org.b3log.latke.service.annotation.Service;
 import org.b3log.latke.util.Paginator;
 import org.b3log.latke.util.URLs;
+import org.b3log.solo.model.UserExt;
 import org.b3log.solo.repository.UserRepository;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -62,6 +65,22 @@ public class UserQueryService {
      */
     @Inject
     private UserMgmtService userMgmtService;
+
+    /**
+     * Gets a user by the specified GitHub id.
+     *
+     * @param githubId the specified GitHub id
+     * @return user, returns {@code null} if not found
+     */
+    public JSONObject getUserByGitHubId(final String githubId) {
+        try {
+            return userRepository.getFirst(new Query().setFilter(new PropertyFilter(UserExt.USER_GITHUB_ID, FilterOperator.EQUAL, githubId)));
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Gets a user by GitHub id [" + githubId + "] failed", e);
+
+            return null;
+        }
+    }
 
     /**
      * Gets the administrator.
@@ -117,7 +136,6 @@ public class UserQueryService {
      *         "oId": "",
      *         "userName": "",
      *         "userEmail": "",
-     *         "userPassword": "",
      *         "roleName": ""
      *      }, ....]
      * }
@@ -164,8 +182,7 @@ public class UserQueryService {
      *     "user": {
      *         "oId": "",
      *         "userName": "",
-     *         "userEmail": "",
-     *         "userPassword": ""
+     *         "userEmail": ""
      *     }
      * }
      * </pre>, returns {@code null} if not found
@@ -198,9 +215,9 @@ public class UserQueryService {
      */
     public String getLogoutURL() {
         String to = Latkes.getServePath();
-        to = URLs.encode(to + "/");
+        to = URLs.encode(to);
 
-        return Latkes.getContextPath() + "/logout?goto=" + to;
+        return Latkes.getContextPath() + "/logout?referer=" + to;
     }
 
     /**
@@ -213,6 +230,6 @@ public class UserQueryService {
         String to = Latkes.getServePath();
         to = URLs.encode(to + redirectURL);
 
-        return Latkes.getContextPath() + "/login?goto=" + to;
+        return Latkes.getContextPath() + "/start?referer=" + to;
     }
 }

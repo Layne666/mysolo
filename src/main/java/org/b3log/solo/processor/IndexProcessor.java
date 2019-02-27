@@ -37,12 +37,12 @@ import org.b3log.solo.SoloServletListener;
 import org.b3log.solo.model.Common;
 import org.b3log.solo.model.Option;
 import org.b3log.solo.model.Skin;
-import org.b3log.solo.processor.console.ConsoleRenderer;
 import org.b3log.solo.service.DataModelService;
 import org.b3log.solo.service.InitService;
 import org.b3log.solo.service.PreferenceQueryService;
 import org.b3log.solo.service.StatisticMgmtService;
 import org.b3log.solo.util.Skins;
+import org.b3log.solo.util.Solos;
 import org.json.JSONObject;
 
 import javax.servlet.http.Cookie;
@@ -55,8 +55,8 @@ import java.util.Map;
  * Index processor.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @author <a href="mailto:385321165@qq.com">DASHU</a>
- * @version 1.2.4.13, Jan 24, 2019
+ * @author <a href="https://hacpai.com/member/DASHU">DASHU</a>
+ * @version 1.2.4.15, Feb 11, 2019
  * @since 0.3.1
  */
 @RequestProcessor
@@ -113,7 +113,7 @@ public class IndexProcessor {
             final int currentPageNum = Paginator.getPage(request);
             final JSONObject preference = preferenceQueryService.getPreference();
 
-            // https://github.com/b3log/solo/issues/12060
+            // 前台皮肤切换 https://github.com/b3log/solo/issues/12060
             String specifiedSkin = Skins.getSkinDirName(context);
             if (StringUtils.isBlank(specifiedSkin)) {
                 specifiedSkin = preference.optString(Option.ID_C_SKIN_DIR_NAME);
@@ -148,6 +148,54 @@ public class IndexProcessor {
     }
 
     /**
+     * Shows start page.
+     *
+     * @param context the specified context
+     */
+    @RequestProcessing(value = "/start", method = HttpMethod.GET)
+    public void showStart(final RequestContext context) {
+        if (initService.isInited() && null != Solos.getCurrentUser(context.getRequest(), context.getResponse())) {
+            context.sendRedirect(Latkes.getServePath());
+
+            return;
+        }
+
+        String referer = context.header("referer");
+        if (StringUtils.isBlank(referer) || !isInternalLinks(referer)) {
+            referer = Latkes.getServePath();
+        }
+
+        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "start.ftl");
+        final Map<String, Object> dataModel = renderer.getDataModel();
+        final HttpServletRequest request = context.getRequest();
+        final Map<String, String> langs = langPropsService.getAll(Locales.getLocale(request));
+        dataModel.putAll(langs);
+        dataModel.put(Common.VERSION, SoloServletListener.VERSION);
+        dataModel.put(Common.STATIC_RESOURCE_VERSION, Latkes.getStaticResourceVersion());
+        dataModel.put(Common.YEAR, String.valueOf(Calendar.getInstance().get(Calendar.YEAR)));
+        dataModel.put(Common.REFERER, referer);
+        Keys.fillRuntime(dataModel);
+        dataModelService.fillMinified(dataModel);
+
+        Solos.addGoogleNoIndex(context);
+    }
+
+    /**
+     * Logout.
+     *
+     * @param context the specified context
+     */
+    @RequestProcessing(value = "/logout", method = HttpMethod.GET)
+    public void logout(final RequestContext context) {
+        final HttpServletRequest httpServletRequest = context.getRequest();
+
+        Solos.logout(httpServletRequest, context.getResponse());
+
+        Solos.addGoogleNoIndex(context);
+        context.sendRedirect(Latkes.getServePath());
+    }
+
+    /**
      * Shows kill browser page with the specified context.
      *
      * @param context the specified context
@@ -173,51 +221,13 @@ public class IndexProcessor {
     }
 
     /**
-     * Show register page.
+     * Preventing unvalidated redirects and forwards. See more at:
+     * <a href="https://www.owasp.org/index.php/Unvalidated_Redirects_and_Forwards_Cheat_Sheet">https://www.owasp.org/index.php/
+     * Unvalidated_Redirects_and_Forwards_Cheat_Sheet</a>.
      *
-     * @param context the specified context
+     * @return whether the destinationURL is an internal link
      */
-    @RequestProcessing(value = "/register", method = HttpMethod.GET)
-    public void showRegister(final RequestContext context) {
-        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, "register.ftl");
-        final Map<String, Object> dataModel = renderer.getDataModel();
-        try {
-            final Map<String, String> langs = langPropsService.getAll(Latkes.getLocale());
-            dataModel.putAll(langs);
-            final JSONObject preference = preferenceQueryService.getPreference();
-            dataModelService.fillCommon(context, dataModel, preference);
-            dataModelService.fillMinified(dataModel);
-        } catch (final ServiceException e) {
-            LOGGER.log(Level.ERROR, e.getMessage(), e);
-
-            context.sendError(HttpServletResponse.SC_NOT_FOUND);
-        }
-    }
-
-    /**
-     * Shows initialization page.
-     *
-     * @param context the specified http request context
-     */
-    @RequestProcessing(value = "/init", method = HttpMethod.GET)
-    public void showInit(final RequestContext context) {
-        if (initService.isInited()) {
-            context.sendRedirect("/");
-
-            return;
-        }
-
-        final HttpServletRequest request = context.getRequest();
-        final AbstractFreeMarkerRenderer renderer = new ConsoleRenderer();
-        renderer.setTemplateName("init.ftl");
-        context.setRenderer(renderer);
-        final Map<String, Object> dataModel = renderer.getDataModel();
-        final Map<String, String> langs = langPropsService.getAll(Locales.getLocale(request));
-        dataModel.putAll(langs);
-        dataModel.put(Common.VERSION, SoloServletListener.VERSION);
-        dataModel.put(Common.STATIC_RESOURCE_VERSION, Latkes.getStaticResourceVersion());
-        dataModel.put(Common.YEAR, String.valueOf(Calendar.getInstance().get(Calendar.YEAR)));
-        Keys.fillRuntime(dataModel);
-        dataModelService.fillMinified(dataModel);
+    private boolean isInternalLinks(final String destinationURL) {
+        return destinationURL.startsWith(Latkes.getServePath());
     }
 }

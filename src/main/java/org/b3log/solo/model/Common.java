@@ -21,11 +21,31 @@ package org.b3log.solo.model;
  * This class defines all common model relevant keys.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @author <a href="mailto:dongxu.wang@acm.org">Dongxu Wang</a>
- * @version 1.7.0.0, Jan 3, 2019
+ * @author <a href="https://hacpai.com/member/e">Dongxu Wang</a>
+ * @version 1.7.0.2, Feb 11, 2019
  * @since 0.3.1
  */
 public final class Common {
+
+    /**
+     * Key of referer.
+     */
+    public static final String REFERER = "referer";
+
+    /**
+     * Key of upload msg.
+     */
+    public static final String UPLOAD_MSG = "uploadMsg";
+
+    /**
+     * Key of upload URL.
+     */
+    public static final String UPLOAD_URL = "uploadURL";
+
+    /**
+     * Key of upload token.
+     */
+    public static final String UPLOAD_TOKEN = "uploadToken";
 
     /**
      * Key of marked engine available.
@@ -228,16 +248,6 @@ public final class Common {
     public static final String URI = "URI";
 
     /**
-     * Key of blog.
-     */
-    public static final String BLOG = "blog";
-
-    /**
-     * Key of blog version.
-     */
-    public static final String BLOG_VERSION = "blogVersion";
-
-    /**
      * Key of post to community.
      */
     public static final String POST_TO_COMMUNITY = "postToCommunity";
@@ -291,11 +301,6 @@ public final class Common {
      * Key of unused tags.
      */
     public static final String UNUSED_TAGS = "unusedTags";
-
-    /**
-     * Key of go to.
-     */
-    public static final String GOTO = "goto";
 
     /**
      * Key of online visitor count.

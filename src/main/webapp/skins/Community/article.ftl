@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
     <head>
@@ -102,7 +103,7 @@
                         </sup>
                         </#if>
                     </h2>
-                    <div class="article-body">
+                    <div class="content-reset">
                         ${article.articleContent}
                         <#if "" != article.articleSign.signHTML?trim>
                         <div class="marginTop12">
@@ -142,7 +143,7 @@
         <div class="footer">
             <#include "footer.ftl">
         </div>
-        <@comment_script oId=article.oId>
+        <@comment_script oId=article.oId commentable=article.commentable>
         page.tips.externalRelevantArticlesDisplayCount = "${externalRelevantArticlesDisplayCount}";
         <#if 0 != randomArticlesDisplayCount>
         page.loadRandomArticles();

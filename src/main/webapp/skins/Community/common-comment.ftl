@@ -35,13 +35,13 @@
         </#if>
         ${comment.commentDate2?string("yyyy-MM-dd HH:mm:ss")}
         </div>
-        <div class="comment-content article-body">
+        <div class="comment-content content-reset">
         ${comment.commentContent}
         </div>
         <div class="clear"></div>
     <#if article.commentable>
         <div class="reply">
-            <a rel="nofollow" href="javascript:replyTo('${comment.oId}');">${replyLabel}</a>
+            <a rel="nofollow" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}');">${replyLabel}</a>
         </div>
     </#if>
     </div>

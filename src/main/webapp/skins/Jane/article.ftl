@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
 <head>
@@ -98,7 +99,7 @@
         </div>
 
         <#if previousArticlePermalink?? || nextArticlePermalink??>
-        <div class="article__near fn__flex">
+        <div class="article__near article__near--point fn__flex">
             <#if nextArticlePermalink??>
                 <a href="${servePath}${nextArticlePermalink}" rel="next"
                    class="fn__flex-1 first">
@@ -121,12 +122,30 @@
     </div>
 
     <@comments commentList=articleComments article=article></@comments>
+    <#if 0 != relevantArticlesDisplayCount>
+        <div id="relevantArticles" class="article__near"></div>
+    </#if>
+    <#if 0 != randomArticlesDisplayCount>
+        <div id="randomArticles" class="article__near"></div>
+    </#if>
+    <#if externalRelevantArticlesDisplayCount?? && 0 != externalRelevantArticlesDisplayCount>
+        <div id="externalRelevantArticles" class="article__near"></div>
+    </#if>
     <#if pjax><!---- pjax {#pjax} end ----></#if>
 </div>
 <#include "footer.ftl">
 <#if pjax><!---- pjax {#pjax} start ----></#if>
-<@comment_script oId=article.oId>
+<@comment_script oId=article.oId commentable=article.commentable>
 page.tips.externalRelevantArticlesDisplayCount = "${externalRelevantArticlesDisplayCount}";
+<#if 0 != externalRelevantArticlesDisplayCount>
+    page.loadExternalRelevantArticles("<#list article.articleTags?split(",") as articleTag>${articleTag}<#if articleTag_has_next>,</#if></#list>");
+</#if>
+<#if 0 != randomArticlesDisplayCount>
+    page.loadRandomArticles();
+</#if>
+<#if 0 != relevantArticlesDisplayCount>
+    page.loadRelevantArticles('${article.oId}', '<h4>${relevantArticles1Label}</h4>');
+</#if>
 </@comment_script>
 <#if pjax><!---- pjax {#pjax} end ----></#if>
 </body>

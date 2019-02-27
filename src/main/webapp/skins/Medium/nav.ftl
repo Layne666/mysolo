@@ -67,16 +67,11 @@
             ${logoutLabel}
         </a>
     <#else>
-        <a href="${loginURL}">
+        <a rel="alternate" href="${servePath}/start" rel="section">
             <svg>
                 <use xlink:href="#icon-enter"></use>
-            </svg> ${loginLabel}
-        </a>
-        <a rel="alternate" href="${servePath}/register" rel="section">
-            <svg>
-                <use xlink:href="#icon-register"></use>
             </svg>
-            ${registerLabel}
+            ${startToUseLabel}
         </a>
     </#if>
     </div>

@@ -48,7 +48,7 @@
                             </span>
                             <a class="fn-right" href="${servePath}${comment.commentSharpURL}">${viewLabel}»</a>
                         </div>
-                        <div class="comment-content comment-content">
+                        <div class="comment-content content-reset">
                             ${comment.commentContent}
                         </div>
                     </div>

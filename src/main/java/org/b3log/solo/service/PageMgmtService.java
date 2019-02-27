@@ -19,6 +19,7 @@ package org.b3log.solo.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.b3log.latke.Keys;
+import org.b3log.latke.Latkes;
 import org.b3log.latke.ioc.Inject;
 import org.b3log.latke.logging.Level;
 import org.b3log.latke.logging.Logger;
@@ -31,10 +32,10 @@ import org.b3log.latke.util.Ids;
 import org.b3log.solo.model.Comment;
 import org.b3log.solo.model.Option;
 import org.b3log.solo.model.Page;
-import org.b3log.solo.processor.OAuthGitHubProcessor;
+import org.b3log.solo.model.UserExt;
 import org.b3log.solo.repository.CommentRepository;
 import org.b3log.solo.repository.PageRepository;
-import org.b3log.solo.util.Solos;
+import org.b3log.solo.util.GitHubs;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,7 +46,7 @@ import java.util.List;
  * Page management service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.1.0.11, Jan 29, 2019
+ * @version 1.1.0.13, Feb 7, 2019
  * @since 0.4.0
  */
 @Service
@@ -67,6 +68,12 @@ public class PageMgmtService {
      */
     @Inject
     private CommentRepository commentRepository;
+
+    /**
+     * User query service.
+     */
+    @Inject
+    private UserQueryService userQueryService;
 
     /**
      * Language service.
@@ -111,24 +118,29 @@ public class PageMgmtService {
     private OptionMgmtService optionMgmtService;
 
     /**
+     * Init service.
+     */
+    @Inject
+    private InitService initService;
+
+    /**
      * Refreshes GitHub repos.
      * 同步 GitHub 仓库 https://github.com/b3log/solo/issues/12514
      */
     public void refreshGitHub() {
-        final JSONObject oauthGitHubOpt = optionQueryService.getOptionById(Option.ID_C_OAUTH_GITHUB);
-        if (null == oauthGitHubOpt) {
+        if (!initService.isInited()) {
             return;
         }
 
-        String value = oauthGitHubOpt.optString(Option.OPTION_VALUE);
-        if (StringUtils.isBlank(value)) {
+        JSONObject admin;
+        try {
+            admin = userQueryService.getAdmin();
+        } catch (final Exception e) {
             return;
         }
 
-        final JSONArray github = new JSONArray(value);
-        final String githubPair = github.optString(0);// Just refresh the first account
-        final String githubUserId = githubPair.split(OAuthGitHubProcessor.GITHUB_SPLIT)[0];
-        final JSONArray gitHubRepos = Solos.getGitHubRepos(githubUserId);
+        final String githubId = admin.optString(UserExt.USER_GITHUB_ID);
+        final JSONArray gitHubRepos = GitHubs.getGitHubRepos(githubId);
         if (null == gitHubRepos || gitHubRepos.isEmpty()) {
             return;
         }
@@ -185,9 +197,7 @@ public class PageMgmtService {
                 page.put(Page.PAGE_COMMENTABLE, true);
                 page.put(Page.PAGE_TYPE, "page");
                 page.put(Page.PAGE_PERMALINK, permalink);
-                final JSONObject preference = preferenceQueryService.getPreference();
-                page.put(Page.PAGE_EDITOR_TYPE, preference.optString(Option.ID_C_EDITOR_TYPE));
-                page.put(Page.PAGE_ICON, "https://static.hacpai.com/images/tags/github2.png");
+                page.put(Page.PAGE_ICON, "images/github-icon.png");
                 page.put(Page.PAGE_CONTENT, content);
                 pageRepository.add(page);
             } else {
@@ -220,7 +230,6 @@ public class PageMgmtService {
      *                          "pageCommentable": boolean,
      *                          "pageType": "",
      *                          "pageOpenTarget": "",
-     *                          "pageEditorType": "", // optional, preference specified if not exists this key
      *                          "pageIcon": "" // optional
      *                          }
      *                          }, see {@link Page} for more details
@@ -271,12 +280,6 @@ public class PageMgmtService {
             if (!oldPage.getString(Page.PAGE_PERMALINK).equals(permalink)) { // The permalink has been updated
                 // Updates related comments' links
                 processCommentsForPageUpdate(newPage);
-            }
-
-            // Set editor type
-            if (!newPage.has(Page.PAGE_EDITOR_TYPE)) {
-                final JSONObject preference = preferenceQueryService.getPreference();
-                newPage.put(Page.PAGE_EDITOR_TYPE, preference.optString(Option.ID_C_EDITOR_TYPE));
             }
 
             page.put(Page.PAGE_ICON, page.optString(Page.PAGE_ICON));
@@ -330,7 +333,6 @@ public class PageMgmtService {
      *                          "pageCommentable": boolean,
      *                          "pageType": "",
      *                          "pagePermalink": "", // optional
-     *                          "pageEditorType": "", // optional, preference specified if not exists this key
      *                          "pageIcon": "" // optional
      *                          }
      *                          }, see {@link Page} for more details
@@ -374,12 +376,6 @@ public class PageMgmtService {
             }
 
             page.put(Page.PAGE_PERMALINK, permalink.replaceAll(" ", "-"));
-
-            // Set editor type
-            if (!page.has(Page.PAGE_EDITOR_TYPE)) {
-                final JSONObject preference = preferenceQueryService.getPreference();
-                page.put(Page.PAGE_EDITOR_TYPE, preference.optString(Option.ID_C_EDITOR_TYPE));
-            }
 
             page.put(Page.PAGE_ICON, page.optString(Page.PAGE_ICON));
             final String ret = pageRepository.add(page);

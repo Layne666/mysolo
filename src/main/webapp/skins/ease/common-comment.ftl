@@ -36,11 +36,11 @@
     <#if article.commentable>
         <div class="right  ft-gray">
         ${comment.commentDate2?string("yy-MM-dd HH:mm")}
-            <a rel="nofollow" href="javascript:replyTo('${comment.oId}');">${replyLabel}</a>
+            <a rel="nofollow" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}');">${replyLabel}</a>
         </div>
     </#if>
         <span class="clear"></span>
-        <div class="article-body">${comment.commentContent}</div>
+        <div class="content-reset">${comment.commentContent}</div>
     </div>
     <span class="clear"></span>
 </div>

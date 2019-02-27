@@ -189,7 +189,7 @@ public final class Markdowns {
             final Document doc = Jsoup.parse(html);
             doc.select("a").forEach(a -> {
                 final String src = a.attr("href");
-                if (!StringUtils.startsWithIgnoreCase(src, Latkes.getServePath())) {
+                if (!StringUtils.startsWithIgnoreCase(src, Latkes.getServePath()) && !StringUtils.startsWithIgnoreCase(src, "#")) {
                     a.attr("target", "_blank");
                 }
             });
@@ -197,6 +197,7 @@ public final class Markdowns {
 
             String ret = doc.select("body").html();
             ret = StringUtils.trim(ret);
+            ret = Images.qiniuImgProcessing(ret);
 
             // cache it
             putHTML(markdownText, ret);

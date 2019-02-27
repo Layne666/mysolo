@@ -20,7 +20,7 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.5.0.0, Jan 13, 2019
+ * @version 1.6.0.0, Feb 21, 2019
  */
 
 /**
@@ -28,11 +28,6 @@
  * @static
  */
 var Util = {
-  htmlDecode: function (code) {
-    var div = document.createElement('div')
-    div.innerHTML = decodeURIComponent(code)
-    return div.innerText
-  },
   isArticlePage: function (href) {
     var isArticle = true;
     if (href.indexOf(latkeConfig.servePath + '/tags/') > -1) {
@@ -102,22 +97,20 @@ var Util = {
    * 按需加载 MathJax 及 flow
    * @returns {undefined}
    */
-  parseMarkdown: function (className) {
+  parseMarkdown: function () {
     var hasMathJax = false;
     var hasFlow = false;
-    var className = className || 'article-body';
+    var className = 'content-reset';
     $('.' + className).each(function () {
       $(this).find('p').each(function () {
         if ($(this).text().split('$').length > 2 ||
           ($(this).text().split('\\(').length > 1 &&
             $(this).text().split('\\)').length > 1)) {
-          hasMathJax = true;
-          return false;
+          hasMathJax = true
         }
-      });
+      })
       if ($(this).find('code.lang-flow, code.language-flow').length > 0) {
         hasFlow = true
-        return false;
       }
     });
 
@@ -125,27 +118,30 @@ var Util = {
       var initMathJax = function () {
         MathJax.Hub.Config({
           tex2jax: {
-            inlineMath: [['$', '$'], ["\\(", "\\)"]],
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
             displayMath: [['$$', '$$']],
             processEscapes: true,
             processEnvironments: true,
-            skipTags: ['pre', 'code', 'script']
+            skipTags: ['pre', 'code', 'script'],
+          },
+          asciimath2jax: {
+            delimiters: [['$','$']]
           }
-        });
-        MathJax.Hub.Typeset();
-      };
+        })
+        MathJax.Hub.Typeset()
+      }
 
       if (typeof MathJax !== 'undefined') {
-        initMathJax();
+        initMathJax()
       } else {
         $.ajax({
-          method: "GET",
-          url: "https://cdn.staticfile.org/MathJax/MathJax-2.6-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&_=1473258780393",
-          dataType: "script",
-          cache: true
+          method: 'GET',
+          url: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML',
+          dataType: 'script',
+          cache: true,
         }).done(function () {
-          initMathJax();
-        });
+          initMathJax()
+        })
       }
     }
 
@@ -176,37 +172,6 @@ var Util = {
         });
       }
     }
-  },
-  /**
-   * @description 是否登录
-   * @returns {Boolean} 是否登录
-   */
-  isLoggedIn: function () {
-    if (($("#admin").length === 1 && $("#admin").data("login")) || latkeConfig.isLoggedIn === "true") {
-      return true;
-    } else {
-      return false;
-    }
-  },
-  /**
-   * @description 获取用户名称
-   * @returns {String} 用户名称
-   */
-  getUserName: function () {
-    if ($("#adminName").length === 1) {
-      return $("#adminName").text();
-    } else {
-      return latkeConfig.userName;
-    }
-  },
-  /**
-   * @description 检测页面错误
-   */
-  error: function () {
-    $("#tipMsg").text("Error: " + arguments[0] +
-      " File: " + arguments[1] + "\nLine: " + arguments[2] +
-      " please report this issue on https://github.com/b3log/solo/issues/new");
-    $("#loadMsg").text("");
   },
   /**
    * @description IE6/7，跳转到 kill-browser 页面
@@ -259,17 +224,6 @@ var Util = {
         Label["em" + key + "Label"] + "'/> " + commentSplited[j].substr(3);
     }
     return str;
-  },
-  /**
-   * @description URL 没有协议头，则自动加上 http://
-   * @param {String} url URL 地址
-   * @returns {String} 添加后的URL
-   */
-  proessURL: function (url) {
-    if (!/^\w+:\/\//.test(url)) {
-      url = "http://" + url;
-    }
-    return url;
   },
   /**
    * @description 切换到手机版
@@ -400,19 +354,6 @@ var Util = {
       }
     }
     return format;
-  },
-  /**
-   * @description 获取窗口高度
-   * @returns {Inter} 窗口高度
-   */
-  getWinHeight: function () {
-    if (window.innerHeight) {
-      return window.innerHeight;
-    }
-    if (document.compatMode === "CSS1Compat") {
-      return window.document.documentElement.clientHeight;
-    }
-    return window.document.body.clientHeight;
   }
 };
 if (!Cookie) {

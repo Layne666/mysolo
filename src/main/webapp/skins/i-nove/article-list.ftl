@@ -57,7 +57,7 @@
         </div>
         <div class="clear"></div>
     </div>
-    <div class="article-abstract article-body">
+    <div class="article-abstract content-reset">
         ${article.articleAbstract}
         <div class="clear"></div>
     </div>

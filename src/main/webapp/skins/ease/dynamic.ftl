@@ -54,7 +54,7 @@
                                         <a rel="nofollow" href="${servePath}${comment.commentSharpURL}">${viewLabel}</a>
                                     </div>
                                     <span class="clear"></span>
-                                    <div class="article-body">   
+                                    <div class="content-reset">
                                         ${comment.commentContent}
                                     </div>
                                 </div>

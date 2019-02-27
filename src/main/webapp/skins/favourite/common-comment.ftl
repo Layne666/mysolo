@@ -42,12 +42,12 @@
         <#if article.commentable>
             <div class="right">
                 <a rel="nofollow" class="no-underline"
-                   href="javascript:replyTo('${comment.oId}');">${replyLabel}</a>
+                   href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}');">${replyLabel}</a>
             </div>
         </#if>
             <div class="clear">
             </div>
-            <div class="comment-content article-body">
+            <div class="comment-content content-reset">
             ${comment.commentContent}
             </div>
         </div>

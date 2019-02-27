@@ -50,10 +50,10 @@ import static org.b3log.solo.model.Article.*;
  * Article query service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @author <a href="http://blog.sweelia.com">ArmstrongCN</a>
+ * @author <a href="https://hacpai.com/member/armstrong">ArmstrongCN</a>
  * @author <a href="http://zephyr.b3log.org">Zephyr</a>
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 1.3.2.8, Jan 15, 2019
+ * @version 1.3.2.10, Feb 23, 2019
  * @since 0.3.5
  */
 @Service
@@ -390,21 +390,6 @@ public class ArticleQueryService {
     }
 
     /**
-     * Gets all unpublished articles.
-     *
-     * @return articles all unpublished articles
-     * @throws RepositoryException repository exception
-     */
-    public List<JSONObject> getUnpublishedArticles() throws RepositoryException {
-        final Map<String, SortDirection> sorts = new HashMap<>();
-        sorts.put(Article.ARTICLE_CREATED, SortDirection.DESCENDING);
-        sorts.put(Article.ARTICLE_PUT_TOP, SortDirection.DESCENDING);
-        final Query query = new Query().setFilter(new PropertyFilter(Article.ARTICLE_IS_PUBLISHED, FilterOperator.EQUAL, true));
-
-        return articleRepository.getList(query);
-    }
-
-    /**
      * Gets the recent articles with the specified fetch size.
      *
      * @param fetchSize the specified fetch size
@@ -443,7 +428,6 @@ public class ArticleQueryService {
      *         }, ....],
      *         "articleSignId": "",
      *         "articleViewPwd": "",
-     *         "articleEditorType": "",
      *         "signs": [{
      *             "oId": "",
      *             "signHTML": ""
@@ -469,8 +453,7 @@ public class ArticleQueryService {
             final JSONArray tags = new JSONArray();
             final List<JSONObject> tagArticleRelations = tagArticleRepository.getByArticleId(articleId);
 
-            for (int i = 0; i < tagArticleRelations.size(); i++) {
-                final JSONObject tagArticleRelation = tagArticleRelations.get(i);
+            for (final JSONObject tagArticleRelation : tagArticleRelations) {
                 final String tagId = tagArticleRelation.getString(Tag.TAG + "_" + Keys.OBJECT_ID);
                 final JSONObject tag = tagRepository.get(tagId);
 
@@ -536,7 +519,6 @@ public class ArticleQueryService {
      *         "articlePutTop": boolean,
      *         "articleSignId": "",
      *         "articleViewPwd": "",
-     *         "articleEditorType": "",
      *         .... // Specified by the "excludes"
      *      }, ....]
      * }
@@ -759,7 +741,7 @@ public class ArticleQueryService {
             final int maxTagCnt = displayCnt > tagTitles.length ? tagTitles.length : displayCnt;
             final String articleId = article.getString(Keys.OBJECT_ID);
 
-            final List<JSONObject> articles = new ArrayList<JSONObject>();
+            final List<JSONObject> articles = new ArrayList<>();
 
             for (int i = 0; i < maxTagCnt; i++) { // XXX: should average by tag?
                 final String tagTitle = tagTitles[i];
@@ -805,7 +787,7 @@ public class ArticleQueryService {
             }
 
             final List<Integer> randomIntegers = CollectionUtils.getRandomIntegers(0, articles.size() - 1, displayCnt);
-            final List<JSONObject> ret = new ArrayList<JSONObject>();
+            final List<JSONObject> ret = new ArrayList<>();
 
             for (final int index : randomIntegers) {
                 ret.add(articles.get(index));
@@ -816,22 +798,6 @@ public class ArticleQueryService {
             LOGGER.log(Level.ERROR, "Gets relevant articles failed", e);
 
             return Collections.emptyList();
-        }
-    }
-
-    /**
-     * Determines an article specified by the given article id is published.
-     *
-     * @param articleId the given article id
-     * @return {@code true} if it is published
-     * @throws ServiceException service exception
-     */
-    public boolean isArticlePublished(final String articleId) throws ServiceException {
-        try {
-            return articleRepository.isPublished(articleId);
-        } catch (final RepositoryException e) {
-            LOGGER.log(Level.ERROR, "Determines the article publish status failed[articleId=" + articleId + "]", e);
-            throw new ServiceException(e);
         }
     }
 
@@ -905,25 +871,6 @@ public class ArticleQueryService {
     }
 
     /**
-     * Gets an article by the specified article permalink.
-     * <p>
-     * <b>Note</b>: The article content and abstract is raw (no editor type processing).
-     * </p>
-     *
-     * @param articlePermalink the specified article permalink
-     * @return an article, returns {@code null} if not found
-     * @throws ServiceException service exception
-     */
-    public JSONObject getArticleByPermalink(final String articlePermalink) throws ServiceException {
-        try {
-            return articleRepository.getByPermalink(articlePermalink);
-        } catch (final RepositoryException e) {
-            LOGGER.log(Level.ERROR, "Gets an article[articlePermalink=" + articlePermalink + "] failed", e);
-            throw new ServiceException(e);
-        }
-    }
-
-    /**
      * Gets <em>published</em> articles by the specified author id, current page number and page size.
      *
      * @param authorId       the specified author id
@@ -976,9 +923,8 @@ public class ArticleQueryService {
 
             if (null != context && Solos.needViewPwd(context.getRequest(), context.getResponse(), article)) {
                 final String content = langPropsService.get("articleContentPwd");
-
                 article.put(ARTICLE_CONTENT, content);
-            } else if ("CodeMirror-Markdown".equals(article.optString(ARTICLE_EDITOR_TYPE))) {
+            } else {
                 // Markdown to HTML for content and abstract
                 Stopwatchs.start("Get Article Content [Markdown]");
                 String content = article.optString(ARTICLE_CONTENT);
@@ -1000,9 +946,8 @@ public class ArticleQueryService {
      * Converts the content and abstract for each of the specified articles to HTML if that is saved by Markdown editor.
      *
      * @param articles the specified articles
-     * @throws Exception exception
      */
-    public void markdowns(final List<JSONObject> articles) throws Exception {
+    public void markdowns(final List<JSONObject> articles) {
         for (final JSONObject article : articles) {
             markdown(article);
         }
@@ -1012,31 +957,25 @@ public class ArticleQueryService {
      * Converts the content and abstract for the specified article to HTML if it is saved by Markdown editor.
      *
      * @param article the specified article
-     * @throws Exception exception
      */
-    public void markdown(final JSONObject article) throws Exception {
-        if ("CodeMirror-Markdown".equals(article.optString(ARTICLE_EDITOR_TYPE))) {
-            Stopwatchs.start("Markdown Article[id=" + article.optString(Keys.OBJECT_ID) + "]");
+    public void markdown(final JSONObject article) {
+        Stopwatchs.start("Markdown Article [id=" + article.optString(Keys.OBJECT_ID) + "]");
 
-            Stopwatchs.start("Content");
-            String content = article.optString(ARTICLE_CONTENT);
-            content = Emotions.convert(content);
-            content = Markdowns.toHTML(content);
-            article.put(ARTICLE_CONTENT, content);
-            Stopwatchs.end();
+        String content = article.optString(ARTICLE_CONTENT);
+        content = Emotions.convert(content);
+        content = Markdowns.toHTML(content);
+        article.put(ARTICLE_CONTENT, content);
 
-            String abstractContent = article.optString(ARTICLE_ABSTRACT);
-
-            if (StringUtils.isNotBlank(abstractContent)) {
-                Stopwatchs.start("Abstract");
-                abstractContent = Emotions.convert(abstractContent);
-                abstractContent = Markdowns.toHTML(abstractContent);
-                article.put(ARTICLE_ABSTRACT, abstractContent);
-                Stopwatchs.end();
-            }
-
+        String abstractContent = article.optString(ARTICLE_ABSTRACT);
+        if (StringUtils.isNotBlank(abstractContent)) {
+            Stopwatchs.start("Abstract");
+            abstractContent = Emotions.convert(abstractContent);
+            abstractContent = Markdowns.toHTML(abstractContent);
+            article.put(ARTICLE_ABSTRACT, abstractContent);
             Stopwatchs.end();
         }
+
+        Stopwatchs.end();
     }
 
     /**
@@ -1055,7 +994,7 @@ public class ArticleQueryService {
      * @param articles the specified articles
      * @see #removeUnusedProperties(org.json.JSONObject)
      */
-    public void removeUnusedProperties(final List<JSONObject> articles) {
+    private void removeUnusedProperties(final List<JSONObject> articles) {
         for (final JSONObject article : articles) {
             removeUnusedProperties(article);
         }
@@ -1074,7 +1013,7 @@ public class ArticleQueryService {
      * @param article the specified article
      * @see #removeUnusedProperties(java.util.List)
      */
-    public void removeUnusedProperties(final JSONObject article) {
+    private void removeUnusedProperties(final JSONObject article) {
         article.remove(Keys.OBJECT_ID);
         article.remove(Article.ARTICLE_AUTHOR_ID);
         article.remove(Article.ARTICLE_ABSTRACT);
@@ -1088,5 +1027,8 @@ public class ArticleQueryService {
         article.remove(Article.ARTICLE_IS_PUBLISHED);
         article.remove(Article.ARTICLE_PUT_TOP);
         article.remove(Article.ARTICLE_HAD_BEEN_PUBLISHED);
+        article.remove(Article.ARTICLE_VIEW_PWD);
+        article.remove(Article.ARTICLE_SIGN_ID);
+        article.remove(ARTICLE_COMMENTABLE);
     }
 }

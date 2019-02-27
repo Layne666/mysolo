@@ -25,15 +25,15 @@
     <meta name="viewport" content="initial-scale=1.0,user-scalable=no,maximum-scale=1" media="(device-height: 568px)">
     <title>${searchLabel} - ${blogTitle}${searchLabel}</title>
     <link type="text/css" rel="stylesheet"
-          href="${staticServePath}/css/default-init${miniPostfix}.css?${staticResourceVersion}" charset="utf-8"/>
+          href="${staticServePath}/scss/start.css?${staticResourceVersion}" charset="utf-8"/>
     <link rel="icon" type="image/png" href="${staticServePath}/favicon.png"/>
     <link rel="apple-touch-icon" href="${staticServePath}/favicon.png">
 </head>
-<body>
+<body class="search__body">
 <div class="search__header fn-clear">
-    <a href="${servePath}"><img class="fn-left" width="44" border="0" alt="Solo" title="Solo" src="${staticServePath}/images/logo.png"/></a>
-    <div class="search__input fn-left">
-        <input value="${keyword}" id="keyword" onkeypress="if(event.keyCode===13){document.getElementById('searchBtn').click()}">
+    <a href="${servePath}"><img width="44" border="0" alt="Solo" title="Solo" src="${staticServePath}/images/logo.png"/></a>
+    <div class="search__input">
+        <input value="${keyword}" id="keyword" type="text" onkeypress="if(event.keyCode===13){document.getElementById('searchBtn').click()}">
         <button id="searchBtn" onclick="window.location.href='${servePath}/search?keyword=' + document.getElementById('keyword').value">搜索</button>
     </div>
     <span class="fn-right">
@@ -41,8 +41,7 @@
         <a href="${servePath}/admin-index.do#main">${adminLabel}</a> &nbsp;
         <a href="${logoutURL}">${logoutLabel}</a>
     <#else>
-        <a href="${loginURL}">${loginLabel}</a>
-        &nbsp;   <a href="${servePath}/register">${registerLabel}</a>
+        <a href="${servePath}/start">${startToUseLabel}</a>
     </#if>
         </span>
 </div>
@@ -74,7 +73,6 @@
             <footer>
                 <#list article.articleTags?split(",") as articleTag>
                     <a class="tag" rel="tag" href="${servePath}/tags/${articleTag?url('UTF-8')}">${articleTag}</a>
-                    <#if articleTag_has_next> · ‎</#if>
                 </#list>
             </footer>
         </article>

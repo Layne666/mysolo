@@ -42,15 +42,11 @@
         width: 434px;
     }
 
-    .em00, .em01, .em02, .em03, .em04, .em05, .em06, .em07, .em08, .em09, .em10, .em11, .em12, .em13, .em14 {
-        margin-right: 4px;
-    }
-
-    #comments .article-body {
+    #comments .content-reset {
         width: 340px;
     }
 
-    #dynamic #comments .article-body {
+    #dynamic #comments .content-reset {
         width: 283px;
     }
 
@@ -101,8 +97,7 @@
 
     .sub-nav > .pagination,
     .footer,
-    #comments > div > img,
-    #emotions {
+    #comments > div > img {
         display: none;
     }
 
@@ -124,14 +119,14 @@
     }
 
     .main .pagination,
-    .main > .article-body,
+    .main > .content-reset,
     .comment-disabled,
     #comments > div {
         margin-right: 0;
     }
 
     .side > div,
-    #comments .article-body {
+    #comments .content-reset {
         position: static !important;
         width: auto !important;
     }

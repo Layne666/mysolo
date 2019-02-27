@@ -40,7 +40,7 @@
         ${comment.commentContent}
         </div>
         <#if article?? && article.commentable>
-            <a class="fn__right breadcrumb" href="javascript:replyTo('${comment.oId}')">${replyLabel}</a>
+            <a class="fn__right breadcrumb" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}')">${replyLabel}</a>
         <#else>
          <a class="fn__right breadcrumb" href="${servePath}${comment.commentSharpURL}">${viewLabel}»</a>
         </#if>

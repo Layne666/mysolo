@@ -149,20 +149,6 @@
         </#if>
         </#if>
 
-        <a class="login side-tile">
-            <span data-ico="&#xe03f;"></span>
-            <div class="title">
-                ${loginLabel}
-            </div>
-        </a>
-
-        <a href="${servePath}/register" class="register side-tile">
-            <span data-ico="&#xe02b;"></span>
-            <div class="title">
-                ${registerLabel}
-            </div>
-        </a>
-
         <div class="user side-tile">
             <span>
                 <img src="<#if gravatar??>${gravatar}</#if>"/>
@@ -177,10 +163,10 @@
             </div>
         </a>
 
-        <a href="${servePath}/register" class="logout side-tile">
+        <a href="${servePath}/start" class="register side-tile">
             <span data-ico="&#xe040;"></span>
             <div class="title">
-                ${logoutLabel}
+                ${startToUseLabel}
             </div>
         </a>
     </div>

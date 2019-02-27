@@ -21,26 +21,30 @@ import org.apache.commons.lang.StringUtils;
 import org.b3log.solo.AbstractTestCase;
 import org.b3log.solo.MockHttpServletRequest;
 import org.b3log.solo.MockHttpServletResponse;
+import org.b3log.solo.util.Solos;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import javax.servlet.http.Cookie;
+import java.util.List;
 
 /**
  * {@link IndexProcessor} test case.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.1.2, Jan 24, 2019
+ * @version 1.0.1.4, Feb 22, 2019
  * @since 1.7.0
  */
 @Test(suiteName = "processor")
 public class IndexProcessorTestCase extends AbstractTestCase {
 
     /**
-     * showInit.
+     * showStart.
      */
     @Test
-    public void showInit() {
+    public void showStart() {
         final MockHttpServletRequest request = mockRequest();
-        request.setRequestURI("/init");
+        request.setRequestURI("/start");
         final MockHttpServletResponse response = mockResponse();
         mockDispatcherServletService(request, response);
 
@@ -53,7 +57,7 @@ public class IndexProcessorTestCase extends AbstractTestCase {
      *
      * @throws Exception exception
      */
-    @Test(dependsOnMethods = "showInit")
+    @Test(dependsOnMethods = "showStart")
     public void init() throws Exception {
         super.init();
     }
@@ -69,7 +73,7 @@ public class IndexProcessorTestCase extends AbstractTestCase {
         mockDispatcherServletService(request, response);
 
         final String content = response.body();
-        Assert.assertTrue(StringUtils.contains(content, "<title>Admin 的个人博客</title>"));
+        Assert.assertTrue(StringUtils.contains(content, "<title>Solo 的个人博客</title>"));
     }
 
     /**
@@ -83,20 +87,22 @@ public class IndexProcessorTestCase extends AbstractTestCase {
         mockDispatcherServletService(request, response);
 
         final String content = response.body();
-        Assert.assertTrue(StringUtils.contains(content, "<title>Admin 的个人博客 - 403 Forbidden!</title>"));
+        Assert.assertTrue(StringUtils.contains(content, "<title>Kill IE! - Solo 的个人博客</title>"));
     }
 
     /**
-     * showRegister.
+     * logout.
      */
     @Test(dependsOnMethods = "init")
-    public void showRegister() {
+    public void logout() {
         final MockHttpServletRequest request = mockRequest();
-        request.setRequestURI("/register");
+        request.setRequestURI("/logout");
         final MockHttpServletResponse response = mockResponse();
         mockDispatcherServletService(request, response);
 
-        final String content = response.body();
-        Assert.assertTrue(StringUtils.contains(content, "<title>Admin 的个人博客 - 注册 Solo 用户!</title>"));
+        final List<Cookie> cookies = response.cookies();
+        Assert.assertEquals(cookies.size(), 1);
+        Assert.assertEquals(cookies.get(0).getName(), Solos.COOKIE_NAME);
+        Assert.assertNull(cookies.get(0).getValue());
     }
 }

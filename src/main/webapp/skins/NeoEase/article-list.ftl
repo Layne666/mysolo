@@ -59,7 +59,7 @@
         </a>
     </div>
     <div class="clear"></div>
-    <div class="article-body">
+    <div class="content-reset">
         <div id="abstract${article.oId}">
             ${article.articleAbstract}
         </div>

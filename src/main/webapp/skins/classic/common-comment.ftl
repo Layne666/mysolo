@@ -36,7 +36,7 @@
 
             <#if article.commentable>
                 <a class="no-underline"
-                   href="javascript:replyTo('${comment.oId}');">${replyLabel}</a>
+                   href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}');">${replyLabel}</a>
             </#if>
             </div>
             <div class="clear"></div>
@@ -45,7 +45,7 @@
             <div class="left comment-picture">
                 <img alt="${comment.commentName}" src="${comment.commentThumbnailURL}"/>
             </div>
-            <div class="comment-content content-reset article-body">
+            <div class="comment-content content-reset">
             ${comment.commentContent}
             </div>
             <div class="clear"></div>

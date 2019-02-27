@@ -20,12 +20,11 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.2.4.0, Sep 10, 2018
+ * @version 1.3.0.0, Feb 6, 2019
  */
 
 /* page-list 相关操作 */
 admin.pageList = {
-    currentEditorType: '',
     tablePagination: new TablePaginate("page"),
     pageInfo: {
         currentCount: 1,
@@ -73,15 +72,7 @@ admin.pageList = {
         this.tablePagination.initCommentsDialog();
         this.getList(page);
 
-        var language = Label.localeString.substring(0, 2);
-        if (language === "zh") {
-            language = "zh-cn";
-        }
-
-        admin.pageList.currentEditorType = Label.editorType;
         admin.editors.pageEditor = new SoloEditor({
-            language: language,
-            kind: "all",
             id: "pageContent"
         });
 
@@ -99,12 +90,6 @@ admin.pageList = {
 
             if (admin.pageList.type === "page") {
                 $("#pagePagePanel").slideDown();
-
-                // 使用 CodeMirror 编辑器时，当编辑器初始之前，元素为 display:none 时，行号显示不正常
-                if (Label.editorType === "CodeMirror-Markdown"
-                        && admin.editors.pageEditor.getContent() === "") {
-                    admin.editors.pageEditor.setContent("");
-                }
             } else {
                 $("#pagePagePanel").slideUp();
             }
@@ -209,13 +194,6 @@ admin.pageList = {
                     $($(".fn-type").get(0)).click();
                 }
                 $("#pageCommentable").prop("checked", result.page.pageCommentable);
-
-                if (admin.pageList.currentEditorType !== result.page.pageEditorType) {
-                    admin.editors.pageEditor.remove();
-
-                    admin.pageList.currentEditorType = result.page.pageEditorType;
-                    admin.editors.pageEditor.init(result.page.pageEditorType);
-                }
 
                 admin.editors.pageEditor.setContent(result.page.pageContent);
 
@@ -353,7 +331,6 @@ admin.pageList = {
                     "pageCommentable": $("#pageCommentable").prop("checked"),
                     "pageType": admin.pageList.type,
                     "pageOpenTarget": $("#pageTarget").val(),
-                    "pageEditorType": admin.pageList.currentEditorType,
                     "pageIcon": $("#pageIcon").val()
                 }
             };
@@ -410,13 +387,6 @@ admin.pageList = {
             this.update();
         } else {
             this.add();
-        }
-
-        if (admin.pageList.currentEditorType !== Label.editorType) {
-            admin.editors.pageEditor.remove();
-
-            admin.pageList.currentEditorType = Label.editorType;
-            admin.editors.pageEditor.init(Label.editorType);
         }
     },
     /*

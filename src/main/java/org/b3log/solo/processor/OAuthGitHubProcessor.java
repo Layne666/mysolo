@@ -17,6 +17,8 @@
  */
 package org.b3log.solo.processor;
 
+import jodd.http.HttpRequest;
+import jodd.http.HttpResponse;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.b3log.latke.Keys;
@@ -30,20 +32,19 @@ import org.b3log.latke.servlet.HttpMethod;
 import org.b3log.latke.servlet.RequestContext;
 import org.b3log.latke.servlet.annotation.RequestProcessing;
 import org.b3log.latke.servlet.annotation.RequestProcessor;
-import org.b3log.latke.util.CollectionUtils;
 import org.b3log.latke.util.Requests;
 import org.b3log.latke.util.URLs;
+import org.b3log.solo.model.Common;
 import org.b3log.solo.model.Option;
 import org.b3log.solo.model.UserExt;
 import org.b3log.solo.service.*;
+import org.b3log.solo.util.GitHubs;
 import org.b3log.solo.util.Solos;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -54,7 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.0.3, Jan 29, 2019
+ * @version 1.0.0.4, Feb 15, 2019
  * @since 2.9.5
  */
 @RequestProcessor
@@ -64,11 +65,6 @@ public class OAuthGitHubProcessor {
      * Logger.
      */
     private static final Logger LOGGER = Logger.getLogger(OAuthGitHubProcessor.class);
-
-    /**
-     * Client id.
-     */
-    private static final String CLIENT_ID = "77f93670fee557f1a613";
 
     /**
      * OAuth parameters - state.
@@ -124,11 +120,34 @@ public class OAuthGitHubProcessor {
      */
     @RequestProcessing(value = "/oauth/github/redirect", method = HttpMethod.GET)
     public void redirectGitHub(final RequestContext context) {
-        final String state = Latkes.getServePath() + ":::" + RandomStringUtils.randomAlphanumeric(16);
+        final HttpResponse res = HttpRequest.get("https://hacpai.com/oauth/solo/client").trustAllCerts(true).
+                connectionTimeout(3000).timeout(7000).header("User-Agent", Solos.USER_AGENT).send();
+        if (HttpServletResponse.SC_OK != res.statusCode()) {
+            LOGGER.log(Level.ERROR, "Gets oauth client id failed: " + res.toString());
+
+            context.sendError(HttpServletResponse.SC_NOT_FOUND);
+
+            return;
+        }
+        res.charset("UTF-8");
+        final JSONObject result = new JSONObject(res.bodyText());
+        if (0 != result.optInt(Keys.CODE)) {
+            LOGGER.log(Level.ERROR, "Gets oauth client id failed: " + result.optString(Keys.MSG));
+
+            return;
+        }
+        final String clientId = result.optString(Common.DATA);
+
+        String referer = context.param("referer");
+        if (StringUtils.isBlank(referer)) {
+            referer = Latkes.getServePath();
+        }
+        final String cb = Latkes.getServePath() + "/oauth/github";
+        final String state = referer + ":::" + RandomStringUtils.randomAlphanumeric(16) + ":::cb=" + cb + ":::";
         STATES.put(state, URLs.encode(state));
 
-        final String path = "https://github.com/login/oauth/authorize" + "?client_id=" + CLIENT_ID + "&state=" + state
-                + "&scope=public_repo,user";
+        final String path = "https://github.com/login/oauth/authorize" + "?client_id=" + clientId + "&state=" + state
+                + "&scope=public_repo,read:user,user:email,user:follow";
 
         context.sendRedirect(path);
     }
@@ -148,9 +167,9 @@ public class OAuthGitHubProcessor {
             return;
         }
         STATES.remove(state);
-
+        referer = URLs.decode(referer);
         final String accessToken = context.param("ak");
-        final JSONObject userInfo = Solos.getGitHubUserInfo(accessToken);
+        final JSONObject userInfo = GitHubs.getGitHubUserInfo(accessToken);
         if (null == userInfo) {
             context.sendError(HttpServletResponse.SC_FORBIDDEN);
 
@@ -164,38 +183,22 @@ public class OAuthGitHubProcessor {
         final String userEmail = userInfo.optString(User.USER_EMAIL);
         final String userAvatar = userInfo.optString(UserExt.USER_AVATAR);
 
-        JSONObject oauthGitHubOpt = optionQueryService.getOptionById(Option.ID_C_OAUTH_GITHUB);
-        if (null == oauthGitHubOpt) {
-            oauthGitHubOpt = new JSONObject();
-            oauthGitHubOpt.put(Keys.OBJECT_ID, Option.ID_C_OAUTH_GITHUB);
-            oauthGitHubOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_OAUTH);
-            oauthGitHubOpt.put(Option.OPTION_VALUE, "[]");
-        }
-        String value = oauthGitHubOpt.optString(Option.OPTION_VALUE);
-        if (StringUtils.isBlank(value)) {
-            value = "[]";
-        }
-        final JSONArray github = new JSONArray(value);
-        final Set<String> githubAuths = CollectionUtils.jsonArrayToSet(github);
-        final String oAuthPair = Option.getOAuthPair(githubAuths, openId); // openId:@:userId
-        if (StringUtils.isBlank(oAuthPair)) {
+        JSONObject user = userQueryService.getUserByGitHubId(openId);
+        if (null == user) {
             if (!initService.isInited()) {
                 final JSONObject initReq = new JSONObject();
                 initReq.put(User.USER_NAME, userName);
                 initReq.put(User.USER_EMAIL, userEmail);
-                initReq.put(User.USER_PASSWORD, RandomStringUtils.randomAlphanumeric(8));
                 initReq.put(UserExt.USER_AVATAR, userAvatar);
-
+                initReq.put(UserExt.USER_B3_KEY, openId);
+                initReq.put(UserExt.USER_GITHUB_ID, openId);
                 try {
                     initService.init(initReq);
                 } catch (final Exception e) {
                     // ignored
                 }
             } else {
-                JSONObject user = userQueryService.getUserByEmailOrUserName(userName);
-                if (null == user) {
-                    user = userQueryService.getUserByEmailOrUserName(userEmail);
-                }
+                user = userQueryService.getUserByEmailOrUserName(userName);
                 if (null == user) {
                     final JSONObject preference = preferenceQueryService.getPreference();
                     if (!preference.optBoolean(Option.ID_C_ALLOW_REGISTER)) {
@@ -207,9 +210,10 @@ public class OAuthGitHubProcessor {
                     final JSONObject addUserReq = new JSONObject();
                     addUserReq.put(User.USER_NAME, userName);
                     addUserReq.put(User.USER_EMAIL, userEmail);
-                    addUserReq.put(User.USER_PASSWORD, RandomStringUtils.randomAlphanumeric(8));
                     addUserReq.put(UserExt.USER_AVATAR, userAvatar);
                     addUserReq.put(User.USER_ROLE, Role.VISITOR_ROLE);
+                    addUserReq.put(UserExt.USER_GITHUB_ID, openId);
+                    addUserReq.put(UserExt.USER_B3_KEY, openId);
                     try {
                         userMgmtService.addUser(addUserReq);
                     } catch (final Exception e) {
@@ -217,40 +221,18 @@ public class OAuthGitHubProcessor {
                     }
                 }
             }
+        }
 
-            JSONObject user = userQueryService.getUserByEmailOrUserName(userName);
-            if (null == user) {
-                user = userQueryService.getUserByEmailOrUserName(userEmail);
-            }
-            final String userId = user.optString(Keys.OBJECT_ID);
-            githubAuths.add(openId + GITHUB_SPLIT + userId);
-            value = new JSONArray(githubAuths).toString();
-            oauthGitHubOpt.put(Option.OPTION_VALUE, value);
-            try {
-                optionMgmtService.addOrUpdateOption(oauthGitHubOpt);
-            } catch (final Exception e) {
-                // ignored
-            }
-
-            Solos.login(user, response);
-            context.sendRedirect(Latkes.getServePath());
-            LOGGER.log(Level.INFO, "Logged in [email={0}, remoteAddr={1}] with GitHub oauth", userEmail, Requests.getRemoteAddr(request));
+        user = userQueryService.getUserByEmailOrUserName(userName);
+        if (null == user) {
+            context.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 
             return;
         }
 
-        final String[] openIdUserId = oAuthPair.split(GITHUB_SPLIT);
-        final String userId = openIdUserId[1];
-        final JSONObject userResult = userQueryService.getUser(userId);
-        if (null == userResult) {
-            context.sendError(HttpServletResponse.SC_FORBIDDEN);
-
-            return;
-        }
-
-        final JSONObject user = userResult.optJSONObject(User.USER);
+        final String redirect = StringUtils.substringBeforeLast(referer, "__");
         Solos.login(user, response);
-        context.sendRedirect(Latkes.getServePath());
-        LOGGER.log(Level.INFO, "Logged in [email={0}, remoteAddr={1}] with GitHub oauth", userEmail, Requests.getRemoteAddr(request));
+        context.sendRedirect(redirect);
+        LOGGER.log(Level.INFO, "Logged in [name={0}, remoteAddr={1}] with GitHub oauth", userName, Requests.getRemoteAddr(request));
     }
 }

@@ -42,7 +42,7 @@
 
 
             <#if article.commentable>
-                <a class="fn-right ft-green" href="javascript:replyTo('${comment.oId}')">
+                <a class="fn-right ft-green" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}')">
                     <svg><use xlink:href="#icon-reply"></use></svg> ${reply1Label}
                 </a>
             </#if>

@@ -63,13 +63,9 @@
              <i class="icon__logout"></i>
          </a>
         <#else>
-        <a href="${loginURL}"
-           aria-label="${loginLabel}" class="tooltipped tooltipped__w">
+        <a href="${servePath}/start"
+           aria-label="${startToUseLabel}" class="tooltipped tooltipped__w">
             <i class="icon__login"></i>
-        </a>
-        <a href="${servePath}/register"
-           aria-label="${registerLabel}" class="tooltipped tooltipped__w">
-            <i class="icon__register"></i>
         </a>
         </#if>
         <span onclick="Util.goTop()"

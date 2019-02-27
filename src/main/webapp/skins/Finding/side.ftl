@@ -27,9 +27,7 @@
         &nbsp; 
         <a title="${logoutLabel}" class="icon-logout" href="${logoutURL}"></a>
         <#else>
-        <a title="${loginLabel}" href="${loginURL}" class="icon-login"></a>
-        &nbsp; 
-        <a href="${servePath}/register" title="${registerLabel}" class="icon-register"></a>
+        <a href="${servePath}/start" title="${startToUseLabel}" class="icon-login"></a>
         </#if>
     </span>
 </div>

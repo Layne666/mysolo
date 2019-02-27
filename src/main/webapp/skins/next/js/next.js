@@ -90,7 +90,7 @@ var NexT = {
         });
       }, 500);
 
-      $('body').on('click', '.article-body img', function () {
+      $('body').on('click', '.content-reset img', function () {
         window.open(this.src);
       });
     });
@@ -139,7 +139,7 @@ var NexT = {
     }
   },
   initToc: function () {
-    var $articleTocs = $('.article-body [id^=b3_solo_h]'),
+    var $articleTocs = $('.content-reset [id^=b3_solo_h]'),
       $articleToc = $('.b3-solo-list');
 
     $(window).scroll(function (event) {

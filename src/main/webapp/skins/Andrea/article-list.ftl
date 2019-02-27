@@ -55,7 +55,7 @@
             </div>
         </div>
         <div class="clear"></div>
-        <div class="article-abstract article-body">
+        <div class="article-abstract content-reset">
             ${article.articleAbstract}
             <div class="clear"></div>
             <a class="right underline" href="${servePath}${article.articlePermalink}">

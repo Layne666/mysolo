@@ -41,11 +41,11 @@
             </div>
             <div class="right">
             <#if article.commentable>
-                <a rel="nofollow" class="no-underline" href="javascript:replyTo('${comment.oId}');">${replyLabel}</a>
+                <a rel="nofollow" class="no-underline" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}');">${replyLabel}</a>
             </#if>
             </div>
             <div class="clear"></div>
-            <div class="comment-content article-body">
+            <div class="comment-content content-reset">
             ${comment.commentContent}
             </div>
         </div>

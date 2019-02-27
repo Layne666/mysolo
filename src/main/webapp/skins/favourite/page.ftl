@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
     <head>
@@ -40,7 +41,7 @@
                             <div class="article-abstract">
                                 <div class="note">
                                     <div class="corner"></div>
-                                    <div class="substance article-body">
+                                    <div class="substance content-reset">
                                         ${page.pageContent}
                                     </div>
                                 </div>
@@ -60,6 +61,6 @@
             <div class="footer-icon"><#include "statistic.ftl"></div>
             <#include "footer.ftl">
         </div>
-        <@comment_script oId=page.oId></@comment_script>
+        <@comment_script oId=page.oId commentable=page.commentable></@comment_script>
     </body>
 </html>

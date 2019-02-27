@@ -93,8 +93,8 @@
                href="${servePath}/admin-index.do#main"
                style="background-image: url(${adminUser.userAvatar});"></a>
         <#else>
-            <a href="${loginURL}" class="header__a">
-            ${loginLabel}
+            <a href="${servePath}/start" class="header__a">
+            ${startToUseLabel}
             </a>
         </#if>
         </div>

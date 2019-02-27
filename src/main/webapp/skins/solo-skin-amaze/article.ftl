@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
     <head>
@@ -172,9 +173,7 @@
         		<div id="directory"></div>
     		</div>
         <#include "footer.ftl">
-        </div>
-        <#include "audio.ftl">
-        <@comment_script oId=article.oId>
+        <@comment_script oId=article.oId commentable=article.commentable>
         page.tips.externalRelevantArticlesDisplayCount = "${externalRelevantArticlesDisplayCount}";
         <#if 0 != randomArticlesDisplayCount>
         page.loadRandomArticles();
@@ -186,7 +185,9 @@
         <#if 0 != relevantArticlesDisplayCount>
         page.loadRelevantArticles('${article.oId}', '<h4>${relevantArticlesLabel}</h4>');
         </#if>
-        </@comment_script>    
+        </@comment_script>   
+        </div>
+        <#include "audio.ftl">
     </body>
     <script>
         $(function() {

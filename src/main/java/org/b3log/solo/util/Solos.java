@@ -40,7 +40,6 @@ import org.b3log.solo.model.Common;
 import org.b3log.solo.model.Option;
 import org.b3log.solo.model.UserExt;
 import org.b3log.solo.repository.UserRepository;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.servlet.http.Cookie;
@@ -56,7 +55,7 @@ import java.util.ResourceBundle;
  * Solo utilities.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.6.0.2, Jan 30, 2019
+ * @version 1.7.0.0, Feb 7, 2019
  * @since 2.8.0
  */
 public final class Solos {
@@ -72,16 +71,6 @@ public final class Solos {
     private static final ResourceBundle mailConf = ResourceBundle.getBundle("mail");
 
     /**
-     * B3log Rhythm address.
-     */
-    public static final String B3LOG_RHYTHM_SERVE_PATH;
-
-    /**
-     * B3log Symphony address.
-     */
-    public static final String B3LOG_SYMPHONY_SERVE_PATH;
-
-    /**
      * Favicon API.
      */
     public static final String FAVICON_API;
@@ -90,11 +79,6 @@ public final class Solos {
      * Gravatar address.
      */
     public static final String GRAVATAR;
-
-    /**
-     * Local file upload dir path.
-     */
-    public static final String UPLOAD_DIR_PATH;
 
     /**
      * Mobile skin.
@@ -139,16 +123,8 @@ public final class Solos {
             solo = ResourceBundle.getBundle("b3log"); // 2.8.0 向后兼容
         }
 
-        B3LOG_RHYTHM_SERVE_PATH = solo.getString("rhythm.servePath");
-        B3LOG_SYMPHONY_SERVE_PATH = solo.getString("symphony.servePath");
         FAVICON_API = solo.getString("faviconAPI");
         GRAVATAR = solo.getString("gravatar");
-        String dir = solo.getString("uploadDir");
-        if (StringUtils.isNotBlank(dir) && !StringUtils.endsWith(dir, "/")) {
-            dir += "/";
-        }
-        UPLOAD_DIR_PATH = dir;
-
         String mobileSkin = Option.DefaultPreference.DEFAULT_SKIN_DIR_NAME;
         try {
             mobileSkin = solo.getString("mobile.skin");
@@ -184,77 +160,106 @@ public final class Solos {
     }
 
     /**
-     * Gets GitHub repos.
+     * Constructs a successful result.
      *
-     * @param githubUserId the specified GitHub user id
-     * @return GitHub repos, returns {@code null} if not found
+     * @return result
      */
-    public static JSONArray getGitHubRepos(final String githubUserId) {
+    public static JSONObject newSucc() {
+        return new JSONObject().put(Keys.CODE, 0).put(Keys.MSG, "");
+    }
+
+    /**
+     * Constructs a failed result.
+     *
+     * @return result
+     */
+    public static JSONObject newFail() {
+        return new JSONObject().put(Keys.CODE, -1).put(Keys.MSG, "System is abnormal, please try again later");
+    }
+
+    private static long uploadTokenCheckTime;
+    private static long uploadTokenTime;
+    private static String uploadToken = "";
+    private static String uploadURL = "https://hacpai.com/upload/client";
+    private static String uploadMsg = "";
+
+    /**
+     * Gets upload token.
+     *
+     * @param context the specified context
+     * @return upload token and URL, returns {@code null} if not found
+     */
+    public static JSONObject getUploadToken(final RequestContext context) {
         try {
-            final HttpResponse res = HttpRequest.get("https://hacpai.com/github/repos?id=" + githubUserId).trustAllCerts(true).
-                    connectionTimeout(3000).timeout(7000).header("User-Agent", Solos.USER_AGENT).send();
+            final JSONObject currentUser = getCurrentUser(context.getRequest(), context.getResponse());
+            if (null == currentUser) {
+                return null;
+            }
+
+            final String userName = currentUser.optString(User.USER_NAME);
+            final String userB3Key = currentUser.optString(UserExt.USER_B3_KEY);
+            if (StringUtils.isBlank(userB3Key)) {
+                return null;
+            }
+
+            final long now = System.currentTimeMillis();
+            if (3600000 >= now - uploadTokenTime) {
+                return new JSONObject().
+                        put(Common.UPLOAD_TOKEN, uploadToken).
+                        put(Common.UPLOAD_URL, uploadURL).
+                        put(Common.UPLOAD_MSG, uploadMsg);
+            }
+
+            if (15000 >= now - uploadTokenCheckTime) {
+                return new JSONObject().
+                        put(Common.UPLOAD_TOKEN, uploadToken).
+                        put(Common.UPLOAD_URL, uploadURL).
+                        put(Common.UPLOAD_MSG, uploadMsg);
+            }
+
+            final JSONObject requestJSON = new JSONObject().put(User.USER_NAME, userName).put(UserExt.USER_B3_KEY, userB3Key);
+            final HttpResponse res = HttpRequest.post("https://hacpai.com/apis/upload/token").trustAllCerts(true).
+                    body(requestJSON.toString()).connectionTimeout(3000).timeout(7000).header("User-Agent", Solos.USER_AGENT).send();
+            uploadTokenCheckTime = now;
             if (HttpServletResponse.SC_OK != res.statusCode()) {
                 return null;
             }
             res.charset("UTF-8");
             final JSONObject result = new JSONObject(res.bodyText());
-            if (0 != result.optInt(Keys.STATUS_CODE)) {
+            if (0 != result.optInt(Keys.CODE)) {
+                uploadMsg = result.optString(Keys.MSG);
+                LOGGER.log(Level.ERROR, uploadMsg);
+
                 return null;
             }
-            final JSONObject data = result.optJSONObject(Common.DATA);
-            final JSONArray ret = data.optJSONArray("githubrepos");
 
-            return ret;
+            final JSONObject data = result.optJSONObject(Common.DATA);
+            uploadTokenTime = now;
+            uploadToken = data.optString("uploadToken");
+            uploadURL = data.optString("uploadURL");
+            uploadMsg = "";
+
+            return new JSONObject().
+                    put(Common.UPLOAD_TOKEN, uploadToken).
+                    put(Common.UPLOAD_URL, uploadURL).
+                    put(Common.UPLOAD_MSG, uploadMsg);
         } catch (final Exception e) {
-            LOGGER.log(Level.ERROR, "Gets GitHub repos failed", e);
+            LOGGER.log(Level.ERROR, "Gets upload token failed", e);
 
             return null;
         }
     }
 
     /**
-     * Gets GitHub user info.
+     * Sanitizes the specified file name.
      *
-     * @param accessToken the specified access token
-     * @return GitHub user info, for example, <pre>
-     * {
-     *   "openId": "",
-     *   "userName": "D",
-     *   "userEmail": "d@b3log.org", // may be empty
-     *   "userAvatar": "https://avatars3.githubusercontent.com/u/873584?v=4"
-     * }
-     * </pre>, returns {@code null} if not found QQ user info
+     * @param unsanitized the specified file name
+     * @return sanitized file name
      */
-    public static JSONObject getGitHubUserInfo(final String accessToken) {
-        try {
-            final HttpResponse res = HttpRequest.get("https://hacpai.com/github/user?ak=" + accessToken).trustAllCerts(true).
-                    connectionTimeout(3000).timeout(7000).header("User-Agent", Solos.USER_AGENT).send();
-            if (HttpServletResponse.SC_OK != res.statusCode()) {
-                return null;
-            }
-            res.charset("UTF-8");
-            final JSONObject result = new JSONObject(res.bodyText());
-            if (0 != result.optInt(Keys.STATUS_CODE)) {
-                return null;
-            }
-            final JSONObject data = result.optJSONObject(Common.DATA);
-            final String userName = StringUtils.trim(data.optString("userName"));
-            final String email = data.optString("userEmail");
-            final String openId = data.optString("userId");
-            final String avatarUrl = data.optString("userAvatarURL");
-
-            final JSONObject ret = new JSONObject();
-            ret.put("openId", openId);
-            ret.put(User.USER_NAME, userName);
-            ret.put(User.USER_EMAIL, email);
-            ret.put(UserExt.USER_AVATAR, avatarUrl);
-
-            return ret;
-        } catch (final Exception e) {
-            LOGGER.log(Level.ERROR, "Gets GitHub user info failed", e);
-
-            return null;
-        }
+    public static String sanitizeFilename(final String unsanitized) {
+        return unsanitized.
+                replaceAll("[\\?\\\\/:|<>\\*\\[\\]]", "-"). // ? \ / : | < > * [ ] to -
+                replaceAll("\\s+", "-");              // white space to -
     }
 
     /**
@@ -304,10 +309,10 @@ public final class Solos {
                     break;
                 }
 
-                final String userPassword = user.optString(User.USER_PASSWORD);
-                final String token = cookieJSONObject.optString(Keys.TOKEN);
-                final String hashPassword = StringUtils.substringBeforeLast(token, ":");
-                if (userPassword.equals(hashPassword)) {
+                final String b3Key = user.optString(UserExt.USER_B3_KEY);
+                final String tokenVal = cookieJSONObject.optString(Keys.TOKEN);
+                final String token = StringUtils.substringBeforeLast(tokenVal, ":");
+                if (StringUtils.equals(b3Key, token)) {
                     login(user, response);
 
                     return user;
@@ -329,22 +334,16 @@ public final class Solos {
      * Logins the specified user from the specified request.
      *
      * @param response the specified response
-     * @param user     the specified user, for example,
-     *                 {
-     *                 "userEmail": "",
-     *                 "userPassword": ""
-     *                 }
+     * @param user     the specified user
      */
     public static void login(final JSONObject user, final HttpServletResponse response) {
         try {
             final String userId = user.optString(Keys.OBJECT_ID);
             final JSONObject cookieJSONObject = new JSONObject();
             cookieJSONObject.put(Keys.OBJECT_ID, userId);
-            cookieJSONObject.put(User.USER_PASSWORD, user.optString(User.USER_PASSWORD));
-
-            final String random = RandomStringUtils.randomAlphanumeric(16);
-            cookieJSONObject.put(Keys.TOKEN, user.optString(User.USER_PASSWORD) + ":" + random);
-
+            final String b3Key = user.optString(UserExt.USER_B3_KEY);
+            final String random = RandomStringUtils.randomAlphanumeric(8);
+            cookieJSONObject.put(Keys.TOKEN, b3Key + ":" + random);
             final String cookieValue = Crypts.encryptByAES(cookieJSONObject.toString(), COOKIE_SECRET);
             final Cookie cookie = new Cookie(COOKIE_NAME, cookieValue);
             cookie.setPath("/");

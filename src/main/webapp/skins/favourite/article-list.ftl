@@ -50,7 +50,7 @@
             </#if>
         </div>
     </div>
-    <div class="article-abstract article-body">
+    <div class="article-abstract content-reset">
         <div class="note">
             <div class="corner"></div>
             <div class="substance">

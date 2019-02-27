@@ -18,6 +18,7 @@
 package org.b3log.solo.event;
 
 import jodd.http.HttpRequest;
+import jodd.http.HttpResponse;
 import org.apache.commons.lang.StringUtils;
 import org.b3log.latke.Keys;
 import org.b3log.latke.Latkes;
@@ -33,6 +34,7 @@ import org.b3log.solo.SoloServletListener;
 import org.b3log.solo.model.Article;
 import org.b3log.solo.model.Common;
 import org.b3log.solo.model.Option;
+import org.b3log.solo.model.UserExt;
 import org.b3log.solo.service.ArticleQueryService;
 import org.b3log.solo.service.PreferenceQueryService;
 import org.b3log.solo.util.Solos;
@@ -41,12 +43,12 @@ import org.json.JSONObject;
 /**
  * This listener is responsible for sending article to B3log Rhythm. Sees <a href="https://hacpai.com/b3log">B3log 构思</a> for more details.
  * <p>
- * The B3log Rhythm article update interface: http://rhythm.b3log.org/article (POST).
+ * API spec: https://hacpai.com/article/1457158841475
  * </p>
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @author ArmstrongCN
- * @version 1.0.2.15, Sep 25, 2018
+ * @author <a href="https://hacpai.com/member/armstrong">ArmstrongCN</a>
+ * @version 1.0.2.18, Feb 21, 2019
  * @since 0.3.1
  */
 @Singleton
@@ -57,21 +59,44 @@ public class B3ArticleSender extends AbstractEventListener<JSONObject> {
      */
     private static final Logger LOGGER = Logger.getLogger(B3ArticleSender.class);
 
-    /**
-     * URL of adding article to Rhythm.
-     */
-    private static final String ADD_ARTICLE_URL = Solos.B3LOG_RHYTHM_SERVE_PATH + "/article";
-
     @Override
     public void action(final Event<JSONObject> event) {
         final JSONObject data = event.getData();
-
         LOGGER.log(Level.DEBUG, "Processing an event [type={0}, data={1}] in listener [className={2}]",
                 event.getType(), data, B3ArticleSender.class.getName());
+
+        pushArticleToRhy(data);
+    }
+
+    /**
+     * Pushes the specified article data to B3log Rhythm.
+     *
+     * @param data the specified article data
+     */
+    public static void pushArticleToRhy(final JSONObject data) {
         try {
             final JSONObject originalArticle = data.getJSONObject(Article.ARTICLE);
+            final String title = originalArticle.getString(Article.ARTICLE_TITLE);
             if (!originalArticle.getBoolean(Article.ARTICLE_IS_PUBLISHED)) {
-                LOGGER.log(Level.DEBUG, "Ignores post article[title={0}] to Rhythm", originalArticle.getString(Article.ARTICLE_TITLE));
+                LOGGER.log(Level.INFO, "Ignored push an article [title={0}] to Rhy", title);
+
+                return;
+            }
+
+            if (StringUtils.isNotBlank(originalArticle.optString(Article.ARTICLE_VIEW_PWD))) {
+                LOGGER.log(Level.INFO, "Article [title={0}] is a password article, ignored push to Rhy", title);
+
+                return;
+            }
+
+            if (!originalArticle.optBoolean(Common.POST_TO_COMMUNITY)) {
+                LOGGER.log(Level.INFO, "Article [title={0}] push flag [postToCommunity] is false, ignored push to Rhy", title);
+
+                return;
+            }
+
+            if (Latkes.getServePath().contains("localhost") || Strings.isIPv4(Latkes.getServePath())) {
+                LOGGER.log(Level.INFO, "Solo is running on local server, ignored push article [title={0}] to Rhy", title);
 
                 return;
             }
@@ -79,59 +104,33 @@ public class B3ArticleSender extends AbstractEventListener<JSONObject> {
             final BeanManager beanManager = BeanManager.getInstance();
             final PreferenceQueryService preferenceQueryService = beanManager.getReference(PreferenceQueryService.class);
             final ArticleQueryService articleQueryService = beanManager.getReference(ArticleQueryService.class);
-
             final JSONObject preference = preferenceQueryService.getPreference();
-            if (null == preference) {
-                LOGGER.log(Level.ERROR, "Not found preference");
 
-                return;
-            }
-
-            if (StringUtils.isNotBlank(originalArticle.optString(Article.ARTICLE_VIEW_PWD))) {
-                return;
-            }
-
-            if (Latkes.getServePath().contains("localhost") || Strings.isIPv4(Latkes.getServePath())) {
-                LOGGER.log(Level.TRACE, "Solo runs on local server, so should not send this article[id={0}, title={1}] to Rhythm",
-                        originalArticle.getString(Keys.OBJECT_ID), originalArticle.getString(Article.ARTICLE_TITLE));
-                return;
-            }
-
+            final JSONObject article = new JSONObject().
+                    put("id", originalArticle.getString(Keys.OBJECT_ID)).
+                    put("title", originalArticle.getString(Article.ARTICLE_TITLE)).
+                    put("permalink", originalArticle.getString(Article.ARTICLE_PERMALINK)).
+                    put("tags", originalArticle.getString(Article.ARTICLE_TAGS_REF)).
+                    put("content", originalArticle.getString(Article.ARTICLE_CONTENT));
             final JSONObject author = articleQueryService.getAuthor(originalArticle);
-            final String authorEmail = author.optString(User.USER_EMAIL);
+            final JSONObject client = new JSONObject().
+                    put("title", preference.getString(Option.ID_C_BLOG_TITLE)).
+                    put("host", Latkes.getServePath()).
+                    put("name", "Solo").
+                    put("ver", SoloServletListener.VERSION).
+                    put("userName", author.optString(User.USER_NAME)).
+                    put("userB3Key", author.optString(UserExt.USER_B3_KEY));
+            final JSONObject requestJSONObject = new JSONObject().
+                    put("article", article).
+                    put("client", client);
+            final HttpResponse response = HttpRequest.post("https://rhythm.b3log.org/api/article").bodyText(requestJSONObject.toString()).
+                    connectionTimeout(3000).timeout(7000).
+                    contentTypeJson().header("User-Agent", Solos.USER_AGENT).send();
 
-            final JSONObject requestJSONObject = new JSONObject();
-            final JSONObject article = new JSONObject();
-
-            article.put(Keys.OBJECT_ID, originalArticle.getString(Keys.OBJECT_ID));
-            article.put(Article.ARTICLE_TITLE, originalArticle.getString(Article.ARTICLE_TITLE));
-            article.put(Article.ARTICLE_PERMALINK, originalArticle.getString(Article.ARTICLE_PERMALINK));
-            article.put(Article.ARTICLE_TAGS_REF, originalArticle.getString(Article.ARTICLE_TAGS_REF));
-            article.put(Article.ARTICLE_T_AUTHOR_EMAIL, authorEmail);
-            article.put(Article.ARTICLE_CONTENT, originalArticle.getString(Article.ARTICLE_CONTENT));
-            article.put(Article.ARTICLE_T_CREATE_DATE, originalArticle.getLong(Article.ARTICLE_CREATED));
-            article.put(Article.ARTICLE_T_CREATE_DATE, originalArticle.getLong(Article.ARTICLE_UPDATED));
-            article.put(Common.POST_TO_COMMUNITY, originalArticle.getBoolean(Common.POST_TO_COMMUNITY));
-
-            // Removes this property avoid to persist
-            originalArticle.remove(Common.POST_TO_COMMUNITY);
-
-            requestJSONObject.put(Article.ARTICLE, article);
-            requestJSONObject.put(Common.BLOG_VERSION, SoloServletListener.VERSION);
-            requestJSONObject.put(Common.BLOG, "Solo");
-            requestJSONObject.put(Option.ID_C_BLOG_TITLE, preference.getString(Option.ID_C_BLOG_TITLE));
-            requestJSONObject.put("blogHost", Latkes.getServePath());
-            requestJSONObject.put("userB3Key", preference.optString(Option.ID_C_KEY_OF_SOLO));
-            requestJSONObject.put("clientAdminEmail", preference.optString(Option.ID_C_ADMIN_EMAIL));
-            requestJSONObject.put("clientRuntimeEnv", "LOCAL");
-
-            HttpRequest.post(ADD_ARTICLE_URL).bodyText(requestJSONObject.toString()).
-                    contentTypeJson().header("User-Agent", Solos.USER_AGENT).sendAsync();
+            LOGGER.log(Level.INFO, "Pushed an article [title={0}] to Rhy, response [{1}]", title, response.toString());
         } catch (final Exception e) {
-            LOGGER.log(Level.ERROR, "Sends an article to Rhythm error: {0}", e.getMessage());
+            LOGGER.log(Level.ERROR, "Pushes an article to Rhy failed: " + e.getMessage());
         }
-
-        LOGGER.log(Level.DEBUG, "Sent an article to Rhythm");
     }
 
     /**

@@ -65,7 +65,7 @@ import java.util.*;
  * Admin console render processing.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.7.0.10, Jan 4, 2019
+ * @version 1.7.0.11, Feb 6, 2019
  * @since 0.4.1
  */
 @Singleton
@@ -119,22 +119,14 @@ public class AdminConsole {
     @Inject
     private EventManager eventManager;
 
-    private static String sanitizeFilename(final String unsanitized) {
-        return unsanitized.
-                replaceAll("[\\?\\\\/:|<>\\*]", " "). // filter out ? \ / : | < > *
-                replaceAll("\\s+", "_");              // white space as underscores
-    }
-
     /**
      * Shows administrator index with the specified context.
      *
      * @param context the specified context
      */
     public void showAdminIndex(final RequestContext context) {
-        final AbstractFreeMarkerRenderer renderer = new ConsoleRenderer();
-        context.setRenderer(renderer);
         final String templateName = "admin-index.ftl";
-        renderer.setTemplateName(templateName);
+        final AbstractFreeMarkerRenderer renderer = new ConsoleRenderer(context, templateName);
         final Map<String, String> langs = langPropsService.getAll(Latkes.getLocale());
         final Map<String, Object> dataModel = renderer.getDataModel();
         dataModel.putAll(langs);
@@ -163,12 +155,21 @@ public class AdminConsole {
             dataModel.put(Option.ID_C_ARTICLE_LIST_DISPLAY_COUNT, preference.getInt(Option.ID_C_ARTICLE_LIST_DISPLAY_COUNT));
             dataModel.put(Option.ID_C_ARTICLE_LIST_PAGINATION_WINDOW_SIZE, preference.getInt(Option.ID_C_ARTICLE_LIST_PAGINATION_WINDOW_SIZE));
             dataModel.put(Option.ID_C_LOCALE_STRING, preference.getString(Option.ID_C_LOCALE_STRING));
-            dataModel.put(Option.ID_C_EDITOR_TYPE, preference.getString(Option.ID_C_EDITOR_TYPE));
             dataModel.put(Skin.SKIN_DIR_NAME, preference.getString(Skin.SKIN_DIR_NAME));
             Keys.fillRuntime(dataModel);
             dataModelService.fillMinified(dataModel);
             // 使用 Marked 时代码高亮问题 https://github.com/b3log/solo/issues/12614
             dataModel.put(Common.MARKED_AVAILABLE, Markdowns.MARKED_AVAILABLE);
+            // 内置 HTTPS+CDN 文件存储 https://github.com/b3log/solo/issues/12556
+            dataModel.put(Common.UPLOAD_TOKEN, "");
+            dataModel.put(Common.UPLOAD_URL, "");
+            dataModel.put(Common.UPLOAD_MSG, langPropsService.get("getUploadTokenErrLabel"));
+            final JSONObject upload = Solos.getUploadToken(context);
+            if (null != upload) {
+                dataModel.put(Common.UPLOAD_TOKEN, upload.optString(Common.UPLOAD_TOKEN));
+                dataModel.put(Common.UPLOAD_URL, upload.optString(Common.UPLOAD_URL));
+                dataModel.put(Common.UPLOAD_MSG, upload.optString(Common.UPLOAD_MSG));
+            }
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Admin index render failed", e);
         }
@@ -182,13 +183,9 @@ public class AdminConsole {
      * @param context the specified context
      */
     public void showAdminFunctions(final RequestContext context) {
-        final AbstractFreeMarkerRenderer renderer = new ConsoleRenderer();
-        context.setRenderer(renderer);
         final String requestURI = context.requestURI();
         final String templateName = StringUtils.substringBetween(requestURI, Latkes.getContextPath() + '/', ".") + ".ftl";
-
-        LOGGER.log(Level.TRACE, "Admin function[templateName={0}]", templateName);
-        renderer.setTemplateName(templateName);
+        final AbstractFreeMarkerRenderer renderer = new ConsoleRenderer(context, templateName);
 
         final Locale locale = Latkes.getLocale();
         final Map<String, String> langs = langPropsService.getAll(locale);
@@ -209,10 +206,8 @@ public class AdminConsole {
      * @param context the specified context
      */
     public void showAdminPreferenceFunction(final RequestContext context) {
-        final AbstractFreeMarkerRenderer renderer = new ConsoleRenderer();
-        context.setRenderer(renderer);
         final String templateName = "admin-preference.ftl";
-        renderer.setTemplateName(templateName);
+        final AbstractFreeMarkerRenderer renderer = new ConsoleRenderer(context, templateName);
 
         final Locale locale = Latkes.getLocale();
         final Map<String, String> langs = langPropsService.getAll(locale);
@@ -492,7 +487,7 @@ public class AdminConsole {
 
     private void exportHexoMd(final List<JSONObject> articles, final String dirPath) {
         articles.forEach(article -> {
-            final String filename = sanitizeFilename(article.optString("title")) + ".md";
+            final String filename = Solos.sanitizeFilename(article.optString("title")) + ".md";
             final String text = article.optString("front") + "---" + Strings.LINE_SEPARATOR + article.optString("content");
 
             try {

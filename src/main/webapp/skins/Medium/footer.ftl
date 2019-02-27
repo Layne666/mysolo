@@ -55,25 +55,10 @@
 
     var Label = {
         "markedAvailable": ${markedAvailable?c},
-        "skinDirName": "${skinDirName}",
-        "em00Label": "${em00Label}",
-        "em01Label": "${em01Label}",
-        "em02Label": "${em02Label}",
-        "em03Label": "${em03Label}",
-        "em04Label": "${em04Label}",
-        "em05Label": "${em05Label}",
-        "em06Label": "${em06Label}",
-        "em07Label": "${em07Label}",
-        "em08Label": "${em08Label}",
-        "em09Label": "${em09Label}",
-        "em10Label": "${em10Label}",
-        "em11Label": "${em11Label}",
-        "em12Label": "${em12Label}",
-        "em13Label": "${em13Label}",
-        "em14Label": "${em14Label}"
+        "skinDirName": "${skinDirName}"
     };
     Util.initSW();
     Util.killIE(8)
-    Util.parseMarkdown('content-reset');
+    Util.parseMarkdown();
 </script>
 ${plugins}

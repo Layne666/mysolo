@@ -78,7 +78,7 @@ var Finding = {
     $('.nav .icon-list').show();
     Finding.tabNav('toc')
 
-    var $articleTocs = $('.article-body [id^=b3_solo_h]'),
+    var $articleTocs = $('.content-reset [id^=b3_solo_h]'),
       $articleToc = $('.b3-solo-list');
 
     $(window).scroll(function (event) {

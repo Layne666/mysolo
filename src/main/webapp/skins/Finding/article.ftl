@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
     <head>
@@ -83,7 +84,7 @@
                             <time>${article.articleCreateDate?string("yyyy-MM-dd")}</time>
                         </section>
                     </header>
-                    <section class="post-content article-body">
+                    <section class="post-content content-reset">
                         ${article.articleContent}
                         <#if "" != article.articleSign.signHTML?trim>
                         <div class="marginTop12">
@@ -107,7 +108,15 @@
                         </div>
                     </footer>
                 </article>
+                <#if 0 != relevantArticlesDisplayCount>
+                <div id="relevantArticles" class="fn-wrap"></div>
+                </#if>
+                <#if 0 != randomArticlesDisplayCount>
+                <div id="randomArticles" class="fn-wrap"></div>
+                </#if>
+                <#if externalRelevantArticlesDisplayCount?? && 0 != externalRelevantArticlesDisplayCount>
                 <div id="externalRelevantArticles" class="fn-wrap"></div>
+                </#if>
                 <@comments commentList=articleComments article=article></@comments>
             </main>
             <#if nextArticlePermalink?? || previousArticlePermalink??>
@@ -134,10 +143,16 @@
             </#if>
             <#include "footer.ftl">
 
-            <@comment_script oId=article.oId>
+            <@comment_script oId=article.oId commentable=article.commentable>
             page.tips.externalRelevantArticlesDisplayCount = "${externalRelevantArticlesDisplayCount}";
             <#if 0 != externalRelevantArticlesDisplayCount>
             page.loadExternalRelevantArticles("<#list article.articleTags?split(",") as articleTag>${articleTag}<#if articleTag_has_next>,</#if></#list>");
+            </#if>
+            <#if 0 != randomArticlesDisplayCount>
+            page.loadRandomArticles();
+            </#if>
+            <#if 0 != relevantArticlesDisplayCount>
+            page.loadRelevantArticles('${article.oId}', '<h4>${relevantArticles1Label}</h4>');
             </#if>
              </@comment_script>    
         </div>

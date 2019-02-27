@@ -53,7 +53,7 @@ import javax.servlet.http.HttpSessionEvent;
  * Solo Servlet listener.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.10.0.8, Jan 16, 2019
+ * @version 1.10.0.10, Feb 16, 2019
  * @since 0.3.1
  */
 public final class SoloServletListener extends AbstractServletListener {
@@ -66,7 +66,7 @@ public final class SoloServletListener extends AbstractServletListener {
     /**
      * Solo version.
      */
-    public static final String VERSION = "2.9.9";
+    public static final String VERSION = "3.0.0";
 
     /**
      * Bean manager.
@@ -84,6 +84,8 @@ public final class SoloServletListener extends AbstractServletListener {
         validateSkin();
 
         final InitService initService = beanManager.getReference(InitService.class);
+        initService.initTables();
+
         if (initService.isInited()) {
             // Upgrade check https://github.com/b3log/solo/issues/12040
             final UpgradeService upgradeService = beanManager.getReference(UpgradeService.class);
@@ -234,7 +236,7 @@ public final class SoloServletListener extends AbstractServletListener {
 
     /**
      * Resolve skin (template) for the specified HTTP servlet request.
-     * https://github.com/b3log/solo/issues/12060
+     * 前台皮肤切换 https://github.com/b3log/solo/issues/12060
      *
      * @param httpServletRequest the specified HTTP servlet request
      */
@@ -330,8 +332,8 @@ public final class SoloServletListener extends AbstractServletListener {
         DispatcherServlet.get("/console/export/hexo", adminConsole::exportHexo);
 
         final ArticleConsole articleConsole = beanManager.getReference(ArticleConsole.class);
+        DispatcherServlet.get("/console/article/push2rhy", articleConsole::pushArticleToCommunity);
         DispatcherServlet.get("/console/thumbs", articleConsole::getArticleThumbs);
-        DispatcherServlet.post("/console/markdown/2html", articleConsole::markdown2HTML);
         DispatcherServlet.get("/console/article/{id}", articleConsole::getArticle);
         DispatcherServlet.get("/console/articles/status/{status}/{page}/{pageSize}/{windowSize}", articleConsole::getArticles);
         DispatcherServlet.delete("/console/article/{id}", articleConsole::removeArticle);
@@ -384,8 +386,6 @@ public final class SoloServletListener extends AbstractServletListener {
         DispatcherServlet.get("/console/signs/", preferenceConsole::getSigns);
         DispatcherServlet.get("/console/preference/", preferenceConsole::getPreference);
         DispatcherServlet.put("/console/preference/", preferenceConsole::updatePreference);
-        DispatcherServlet.get("/console/preference/oss", preferenceConsole::getOssPreference);
-        DispatcherServlet.put("/console/preference/oss", preferenceConsole::updateOss);
 
         final RepairConsole repairConsole = beanManager.getReference(RepairConsole.class);
         DispatcherServlet.get("/fix/restore-signs", repairConsole::restoreSigns);
@@ -397,7 +397,6 @@ public final class SoloServletListener extends AbstractServletListener {
 
         final UserConsole userConsole = beanManager.getReference(UserConsole.class);
         DispatcherServlet.put("/console/user/", userConsole::updateUser);
-        DispatcherServlet.post("/console/user/", userConsole::addUser);
         DispatcherServlet.delete("/console/user/{id}", userConsole::removeUser);
         DispatcherServlet.get("/console/users/{page}/{pageSize}/{windowSize}", userConsole::getUsers);
         DispatcherServlet.get("/console/user/{id}", userConsole::getUser);

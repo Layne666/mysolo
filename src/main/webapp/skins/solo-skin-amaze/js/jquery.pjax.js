@@ -505,7 +505,6 @@ function onPjaxPopstate(event) {
     }
   }
   initialPop = false;
-  
 }
 
 // Fallback version of main pjax function for browsers that don't

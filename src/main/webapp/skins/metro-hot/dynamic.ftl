@@ -60,7 +60,7 @@
                                         ${comment.commentDate?string("yy-MM-dd HH:mm")}&nbsp; &nbsp;
                                     </div>
                                 </div>
-                                <div class="article-body">${comment.commentContent}</div>
+                                <div class="content-reset">${comment.commentContent}</div>
                             </div>
                         </div>
                         </#if>
@@ -206,7 +206,7 @@
         <span id="goTop" onclick="Util.goTop()" data-ico="&#xe042;" class="side-tile"></span>
         <#include "footer.ftl"/>
         <script>
-            $("#comments .article-body").each(function () {
+            $("#comments .content-reset").each(function () {
                 this.innerHTML = Util.replaceEmString($(this).html());
             });
 

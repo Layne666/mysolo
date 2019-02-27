@@ -36,9 +36,9 @@
         <small><b> ${comment.commentDate2?string("yy-MM-dd HH:mm")}</b></small>
     <#if article.commentable>
         <span class="ico-reply ico right">
-                <a rel="nofollow" href="javascript:replyTo('${comment.oId}');">${replyLabel}</a>
+                <a rel="nofollow" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}');">${replyLabel}</a>
             </span>
     </#if>
-        <div class="article-body">${comment.commentContent}</div>
+        <div class="content-reset">${comment.commentContent}</div>
     </div>
 </li>

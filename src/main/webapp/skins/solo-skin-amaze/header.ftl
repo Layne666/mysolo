@@ -94,4 +94,10 @@
 		$.getScript("${staticServePath}/skins/${skinDirName}/js/common${miniPostfix}.js?${staticResourceVersion}");
 		
 	}); */
+	$(document).on('pjax:complete',function(){
+		if (typeof Vditor !== 'undefined') {
+			Vditor = undefined;
+			$('body').css('padding-bottom', '0');
+		}
+	})
 </script>

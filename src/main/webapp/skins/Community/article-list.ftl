@@ -67,7 +67,7 @@
             </sup>
             </#if>
         </h2>
-        <div class="article-body">
+        <div class="content-reset">
             ${article.articleAbstract}
         </div>
         <div class="read-more">

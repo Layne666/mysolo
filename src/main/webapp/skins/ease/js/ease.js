@@ -88,7 +88,7 @@ var getNextPage = function () {
                 '</div>' +
                 '<div class="clear"></div>' +
                 '</div>' +
-                '<div class="article-body">' +
+                '<div class="content-reset">' +
                 '<div id="abstract' + article.oId + '">' +
                 article.articleAbstract + 
                 '</div>' +
@@ -279,7 +279,7 @@ var ease = {
         }
         
         // emotions
-        $(".article-body").each(function () {
+        $(".content-reset").each(function () {
             this.innerHTML = Util.replaceEmString($(this).html());
         });
     }

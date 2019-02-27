@@ -28,6 +28,7 @@
 @import "../../../scss/comment";
 @import "../../../scss/nprogress";
 @import "icon";
+@import "vditor/src/assets/scss/classic";
 
 $red: #991a1a !default;
 $gray: #999 !default;
@@ -201,7 +202,7 @@ a {
   &__near {
     margin: 50px 0 70px;
     position: relative;
-    &:before {
+    &--point:before {
       width: 8px;
       height: 8px;
       position: absolute;
@@ -213,6 +214,9 @@ a {
       border-radius: 50%;
       background: #ddd;
       box-shadow: 0 1px 2px #fff;
+    }
+    ul {
+      list-style: none;
     }
     a {
       font-size: 12px;
@@ -228,7 +232,8 @@ a {
         text-align: right;
       }
     }
-    strong {
+    strong,
+    h4 {
       margin-bottom: 6px;
       font-size: 14px;
       letter-spacing: 2px;

@@ -17,6 +17,7 @@
  */
 package org.b3log.solo.util;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.b3log.latke.logging.Level;
@@ -30,7 +31,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Image utilities.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.0.0, Feb 14, 2018
+ * @version 1.1.0.0, Feb 10, 2019
  * @since 2.7.0
  */
 public final class Images {
@@ -41,11 +42,53 @@ public final class Images {
     private static final Logger LOGGER = Logger.getLogger(Images.class);
 
     /**
+     * Qiniu image processing.
+     *
+     * @param html the specified content HTML
+     * @return processed content
+     */
+    public static String qiniuImgProcessing(final String html) {
+        String ret = html;
+        final String qiniuDomain = "https://img.hacpai.com";
+        final String[] imgSrcs = StringUtils.substringsBetween(html, "<img src=\"", "\"");
+        if (null == imgSrcs) {
+            return ret;
+        }
+
+        for (final String imgSrc : imgSrcs) {
+            if (!StringUtils.startsWith(imgSrc, qiniuDomain) || StringUtils.contains(imgSrc, ".gif")
+                    || StringUtils.containsIgnoreCase(imgSrc, "?imageView2")) {
+                continue;
+            }
+
+            ret = StringUtils.replace(ret, imgSrc, imgSrc + "?imageView2/2/w/768/format/webp/interlace/1");
+        }
+
+        return ret;
+    }
+
+    /**
+     * Returns image URL of Qiniu image processing style with the specified width and height.
+     *
+     * @param imageURL the specified image URL
+     * @param width    the specified width
+     * @param height   the specified height
+     * @return image URL
+     */
+    public static final String imageSize(final String imageURL, final int width, final int height) {
+        if (StringUtils.containsIgnoreCase(imageURL, "imageView") || !StringUtils.containsIgnoreCase(imageURL, "img.hacpai.com")) {
+            return imageURL;
+        }
+
+        return imageURL + "?imageView2/1/w/" + width + "/h/" + height + "/interlace/1/q/100";
+    }
+
+    /**
      * Gets an image URL randomly. Sees https://github.com/b3log/bing for more details.
      *
      * @return an image URL
      */
-    public static final String randImage() {
+    public static String randImage() {
         try {
             final long min = DateUtils.parseDate("20171104", new String[]{"yyyyMMdd"}).getTime();
             final long max = System.currentTimeMillis();

@@ -61,11 +61,8 @@
                      <i class="icon__logout"></i> ${logoutLabel}
                  </a>
              <#else>
-                    <a href="${loginURL}">
-                        <i class="icon__login"></i> ${loginLabel}
-                    </a>
-                    <a href="${servePath}/register">
-                        <i class="icon__register"></i> ${registerLabel}
+                    <a href="${servePath}/start">
+                        <i class="icon__login"></i> ${startToUseLabel}
                     </a>
              </#if>
         </div>
@@ -90,13 +87,8 @@
             </li>
         <#else>
                 <li>
-                    <a href="${loginURL}">
-                        <i class="icon__login"></i> ${loginLabel}
-                    </a>
-                </li>
-                <li>
-                    <a href="${servePath}/register">
-                        <i class="icon__register"></i> ${registerLabel}
+                    <a href="${servePath}/start">
+                        <i class="icon__login"></i> ${startToUseLabel}
                     </a>
                 </li>
         </#if>

@@ -61,7 +61,7 @@
                                                 ${viewLabel}
                                             </a>
                                         </span>
-                                        <div class="article-body">   
+                                        <div class="content-reset">
                                             ${comment.commentContent}
                                         </div>
                                     </div>

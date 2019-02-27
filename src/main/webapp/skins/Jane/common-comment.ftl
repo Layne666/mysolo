@@ -38,7 +38,7 @@
                 <time>${comment.commentDate2?string("yyyy-MM-dd HH:mm")}</time>
 
             <#if article.commentable>
-            <span class="fn__right comment__btn" onclick="replyTo('${comment.oId}')">
+            <span class="fn__right comment__btn" onclick="page.toggleEditor('${comment.oId}', '${comment.commentName}')">
                 <i class="icon__comments"></i>
             </span>
             </#if>

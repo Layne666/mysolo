@@ -37,10 +37,10 @@
                         <time>${comment.commentDate2?string("yyyy-MM-dd")}</time>
                 </span>
         <#if article.commentable>
-            <a class="fn-right" href="javascript:replyTo('${comment.oId}')">${replyLabel}</a>
+            <a class="fn-right" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}')">${replyLabel}</a>
         </#if>
         </div>
-        <div class="article-body content-reset comment-content">
+        <div class="content-reset comment-content">
         ${comment.commentContent}
         </div>
     </div>

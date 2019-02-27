@@ -17,7 +17,6 @@
  */
 package org.b3log.solo.service;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -29,9 +28,9 @@ import org.b3log.latke.logging.Logger;
 import org.b3log.latke.model.Role;
 import org.b3log.latke.model.User;
 import org.b3log.latke.plugin.PluginManager;
+import org.b3log.latke.repository.Query;
 import org.b3log.latke.repository.RepositoryException;
 import org.b3log.latke.repository.Transaction;
-import org.b3log.latke.repository.jdbc.util.Connections;
 import org.b3log.latke.repository.jdbc.util.JdbcRepositories;
 import org.b3log.latke.repository.jdbc.util.JdbcRepositories.CreateTableResult;
 import org.b3log.latke.service.LangPropsService;
@@ -49,9 +48,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +56,7 @@ import java.util.Set;
  * Solo initialization service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.5.2.27, Jan 28, 2019
+ * @version 1.5.2.29, Feb 10, 2019
  * @since 0.4.0
  */
 @Service
@@ -163,42 +159,40 @@ public class InitService {
             return true;
         }
 
-        try (final Connection connection = Connections.getConnection()) {
-            final PreparedStatement preparedStatement = connection.prepareStatement("SELECT COUNT(1) AS `c` FROM `" + userRepository.getName() + "`");
-            final ResultSet resultSet = preparedStatement.executeQuery();
-            resultSet.next();
-            final int c = resultSet.getInt("c");
-            inited = 0 < c;
+        try {
+            inited = !optionRepository.getList(new Query()).isEmpty();
+            if (!inited && !printedInitMsg) {
+                LOGGER.log(Level.WARN, "Solo has not been initialized, please open your browser and visit [" + Latkes.getServePath() + "] to init Solo");
+                printedInitMsg = true;
+            }
 
             return inited;
         } catch (final Exception e) {
-            if (!printedInitMsg) {
-                LOGGER.log(Level.WARN, "Solo has not been initialized, please open your browser and visit [" + Latkes.getServePath() + "] to init Solo");
-            }
-            printedInitMsg = true;
+            LOGGER.log(Level.ERROR, "Check init failed", e);
 
+            System.exit(-1);
             return false;
         }
     }
 
     /**
-     * Initializes Solo.
-     *
-     * @param requestJSONObject the specified request json object, for example,
-     *                          {
-     *                          "userName": "",
-     *                          "userEmail": "",
-     *                          "userPassword": "", // Unhashed
-     *                          "userAvatar": "" // optional
-     *                          }
-     * @throws ServiceException service exception
+     * Initializes database tables.
      */
-    public void init(final JSONObject requestJSONObject) throws ServiceException {
-        if (isInited()) {
-            return;
+    public void initTables() {
+        try {
+            final String tablePrefix = Latkes.getLocalProperty("jdbc.tablePrefix") + "_";
+            final boolean userTableExist = JdbcRepositories.existTable(tablePrefix + User.USER);
+            final boolean optionTableExist = JdbcRepositories.existTable(tablePrefix + Option.OPTION);
+            if (userTableExist && optionTableExist) {
+                return;
+            }
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Check tables failed", e);
+
+            System.exit(-1);
         }
 
-        LOGGER.log(Level.DEBUG, "Solo is running with database [{0}], creates all tables", Latkes.getRuntimeDatabase());
+        LOGGER.info("It's your first time setup Solo, initialize tables in database [" + Latkes.getRuntimeDatabase() + "]");
 
         if (Latkes.RuntimeDatabase.H2 == Latkes.getRuntimeDatabase()) {
             String dataDir = Latkes.getLocalProperty("jdbc.URL");
@@ -209,8 +203,27 @@ public class InitService {
 
         final List<CreateTableResult> createTableResults = JdbcRepositories.initAllTables();
         for (final CreateTableResult createTableResult : createTableResults) {
-            LOGGER.log(Level.DEBUG, "Create table result [tableName={0}, isSuccess={1}]",
+            LOGGER.log(Level.DEBUG, "Creates table result [tableName={0}, isSuccess={1}]",
                     createTableResult.getName(), createTableResult.isSuccess());
+        }
+    }
+
+    /**
+     * Initializes Solo.
+     *
+     * @param requestJSONObject the specified request json object, for example,
+     *                          {
+     *                          "userName": "",
+     *                          "userEmail": "",
+     *                          "userAvatar": "", // optional
+     *                          "userB3Key": "", // optional
+     *                          "userGitHubId": "" // optional
+     *                          }
+     * @throws ServiceException service exception
+     */
+    public void init(final JSONObject requestJSONObject) throws ServiceException {
+        if (isInited()) {
+            return;
         }
 
         final Transaction transaction = userRepository.beginTransaction();
@@ -244,7 +257,7 @@ public class InitService {
         final JSONObject article = new JSONObject();
 
         article.put(Article.ARTICLE_TITLE, langPropsService.get("helloWorld.title"));
-        final String content = "![](" + Images.randImage() + "?imageView2/1/w/960/h/520/interlace/1/q/100) \n\n" +
+        final String content = "![](" + Images.imageSize(Images.randImage(), 960, 540) + ") \n\n" +
                 langPropsService.get("helloWorld.content");
 
         article.put(Article.ARTICLE_ABSTRACT, content);
@@ -265,13 +278,12 @@ public class InitService {
         article.put(Article.ARTICLE_AUTHOR_ID, admin.optString(Keys.OBJECT_ID));
         article.put(Article.ARTICLE_COMMENTABLE, true);
         article.put(Article.ARTICLE_VIEW_PWD, "");
-        article.put(Article.ARTICLE_EDITOR_TYPE, DefaultPreference.DEFAULT_EDITOR_TYPE);
 
         final String articleId = addHelloWorldArticle(article);
 
         final JSONObject comment = new JSONObject();
         comment.put(Keys.OBJECT_ID, articleId);
-        comment.put(Comment.COMMENT_NAME, "Daniel");
+        comment.put(Comment.COMMENT_NAME, "88250");
         comment.put(Comment.COMMENT_EMAIL, "d@b3log.org");
         comment.put(Comment.COMMENT_URL, "https://hacpai.com/member/88250");
         comment.put(Comment.COMMENT_CONTENT, langPropsService.get("helloWorld.comment.content"));
@@ -376,8 +388,8 @@ public class InitService {
     private JSONArray tag(final String[] tagTitles, final JSONObject article) throws RepositoryException {
         final JSONArray ret = new JSONArray();
 
-        for (int i = 0; i < tagTitles.length; i++) {
-            final String tagTitle = tagTitles[i].trim();
+        for (String tagTitle1 : tagTitles) {
+            final String tagTitle = tagTitle1.trim();
             final JSONObject tag = new JSONObject();
 
             LOGGER.log(Level.TRACE, "Found a new tag[title={0}] in article[title={1}]", tagTitle, article.optString(Article.ARTICLE_TITLE));
@@ -397,8 +409,9 @@ public class InitService {
      *                          {
      *                          "userName": "",
      *                          "userEmail": "",
-     *                          "userPassowrd": "", // Unhashed
-     *                          "userAvatar": "" // optional
+     *                          "userAvatar": "", // optional
+     *                          "userB3Key": "", // optional
+     *                          "userGitHubId": "" // optional
      *                          }
      * @throws Exception exception
      */
@@ -410,12 +423,13 @@ public class InitService {
         admin.put(User.USER_EMAIL, requestJSONObject.getString(User.USER_EMAIL));
         admin.put(User.USER_URL, Latkes.getServePath());
         admin.put(User.USER_ROLE, Role.ADMIN_ROLE);
-        admin.put(User.USER_PASSWORD, DigestUtils.md5Hex(requestJSONObject.getString(User.USER_PASSWORD)));
         String avatar = requestJSONObject.optString(UserExt.USER_AVATAR);
         if (StringUtils.isBlank(avatar)) {
             avatar = Solos.getGravatarURL(requestJSONObject.getString(User.USER_EMAIL), "128");
         }
         admin.put(UserExt.USER_AVATAR, avatar);
+        admin.put(UserExt.USER_B3_KEY, requestJSONObject.optString(UserExt.USER_B3_KEY));
+        admin.put(UserExt.USER_GITHUB_ID, requestJSONObject.optString(UserExt.USER_GITHUB_ID));
         userRepository.add(admin);
 
         LOGGER.debug("Initialized admin");
@@ -652,12 +666,6 @@ public class InitService {
         articleListStyleOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_ARTICLE_LIST_STYLE);
         optionRepository.add(articleListStyleOpt);
 
-        final JSONObject keyOfSoloOpt = new JSONObject();
-        keyOfSoloOpt.put(Keys.OBJECT_ID, Option.ID_C_KEY_OF_SOLO);
-        keyOfSoloOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
-        keyOfSoloOpt.put(Option.OPTION_VALUE, Ids.genTimeMillisId());
-        optionRepository.add(keyOfSoloOpt);
-
         final JSONObject feedOutputModeOpt = new JSONObject();
         feedOutputModeOpt.put(Keys.OBJECT_ID, Option.ID_C_FEED_OUTPUT_MODE);
         feedOutputModeOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
@@ -669,12 +677,6 @@ public class InitService {
         feedOutputCntOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
         feedOutputCntOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_FEED_OUTPUT_CNT);
         optionRepository.add(feedOutputCntOpt);
-
-        final JSONObject editorTypeOpt = new JSONObject();
-        editorTypeOpt.put(Keys.OBJECT_ID, Option.ID_C_EDITOR_TYPE);
-        editorTypeOpt.put(Option.OPTION_CATEGORY, Option.CATEGORY_C_PREFERENCE);
-        editorTypeOpt.put(Option.OPTION_VALUE, DefaultPreference.DEFAULT_EDITOR_TYPE);
-        optionRepository.add(editorTypeOpt);
 
         final JSONObject footerContentOpt = new JSONObject();
         footerContentOpt.put(Keys.OBJECT_ID, Option.ID_C_FOOTER_CONTENT);
@@ -714,86 +716,5 @@ public class InitService {
         optionRepository.add(skinsOpt);
 
         LOGGER.debug("Initialized preference");
-    }
-
-    /**
-     * Sets archive date article repository with the specified archive date article repository.
-     *
-     * @param archiveDateArticleRepository the specified archive date article repository
-     */
-    public void setArchiveDateArticleRepository(final ArchiveDateArticleRepository archiveDateArticleRepository) {
-        this.archiveDateArticleRepository = archiveDateArticleRepository;
-    }
-
-    /**
-     * Sets archive date repository with the specified archive date repository.
-     *
-     * @param archiveDateRepository the specified archive date repository
-     */
-    public void setArchiveDateRepository(final ArchiveDateRepository archiveDateRepository) {
-        this.archiveDateRepository = archiveDateRepository;
-    }
-
-    /**
-     * Sets the article repository with the specified article repository.
-     *
-     * @param articleRepository the specified article repository
-     */
-    public void setArticleRepository(final ArticleRepository articleRepository) {
-        this.articleRepository = articleRepository;
-    }
-
-    /**
-     * Sets the user repository with the specified user repository.
-     *
-     * @param userRepository the specified user repository
-     */
-    public void setUserRepository(final UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    /**
-     * Sets the tag repository with the specified tag repository.
-     *
-     * @param tagRepository the specified tag repository
-     */
-    public void setTagRepository(final TagRepository tagRepository) {
-        this.tagRepository = tagRepository;
-    }
-
-    /**
-     * Sets the tag article repository with the specified tag article repository.
-     *
-     * @param tagArticleRepository the specified tag article repository
-     */
-    public void setTagArticleRepository(final TagArticleRepository tagArticleRepository) {
-        this.tagArticleRepository = tagArticleRepository;
-    }
-
-    /**
-     * Sets the comment repository with the specified comment repository.
-     *
-     * @param commentRepository the specified comment repository
-     */
-    public void setCommentRepository(final CommentRepository commentRepository) {
-        this.commentRepository = commentRepository;
-    }
-
-    /**
-     * Sets the language service with the specified language service.
-     *
-     * @param langPropsService the specified language service
-     */
-    public void setLangPropsService(final LangPropsService langPropsService) {
-        this.langPropsService = langPropsService;
-    }
-
-    /**
-     * Sets the plugin manager with the specified plugin manager.
-     *
-     * @param pluginManager the specified plugin manager
-     */
-    public void setPluginManager(final PluginManager pluginManager) {
-        this.pluginManager = pluginManager;
     }
 }

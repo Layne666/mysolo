@@ -42,7 +42,9 @@
             <a rel="friend" class="ft__red" href="${link.linkAddress}"
                target="_blank">
                 ${link.linkTitle}
+                <#if link.linkDescription != ''>
                 <span class="ft__gray">(${link.linkDescription})</span>
+                </#if>
             </a>
             </#list>
         </div>

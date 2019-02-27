@@ -36,11 +36,11 @@
             <div class="comdater">
                 <!--<span>TODO wptouch_moderate_comment_link(get_comment_ID())</span>-->
             ${comment.commentDate2?string("yyyy-MM-dd HH:mm:ss")}
-                <a rel="nofollow" href="javascript:replyTo('${comment.oId}');">${replyLabel}</a>
+                <a rel="nofollow" href="javascript:page.toggleEditor('${comment.oId}', '${comment.commentName}');">${replyLabel}</a>
             </div>
         </#if>
         </div><!--end comtop-->
-        <div class="combody article-body">
+        <div class="combody content-reset">
             <p>${comment.commentContent}</p>
         </div>
     </div>

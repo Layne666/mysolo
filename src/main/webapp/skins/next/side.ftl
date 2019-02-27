@@ -73,14 +73,8 @@
             </span>
             <#else>
             <span class="links-of-author-item">
-                <a href="${loginURL}">
-                    <i class="icon-login"></i> ${loginLabel}
-                </a>
-            </span>
-
-            <span class="links-of-author-item">
-                <a href="${servePath}/register">
-                    <i class="icon-register"></i> ${registerLabel}
+                <a href="${servePath}/start">
+                    ${startToUseLabel}
                 </a>
             </span>
             </#if> 

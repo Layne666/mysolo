@@ -52,7 +52,7 @@
                 &nbsp; | &nbsp;${viewsLabel} ${article.articleViewCount}°C
             </div>
         </header>
-        <div class="article-body">
+        <div class="content-reset">
             ${article.articleAbstract}
         </div>
         <div class="post-more-link">

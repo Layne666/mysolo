@@ -20,13 +20,12 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.2.1.13, Dec 24, 2018
+ * @version 1.2.1.15, Feb 17, 2019
  */
 
 /* preference 相关操作 */
 admin.preference = {
     locale: "",
-    editorType: "",
     /*
      * 初始化
      */
@@ -64,7 +63,6 @@ admin.preference = {
                 $("#externalRelevantArticlesDisplayCount").val(preference.externalRelevantArticlesDisplayCount);
                 $("#relevantArticlesDisplayCount").val(preference.relevantArticlesDisplayCount);
                 $("#randomArticlesDisplayCount").val(preference.randomArticlesDisplayCount);
-                $("#keyOfSolo").val(preference.keyOfSolo);
                 $("#customVars").val(preference.customVars);
 
                 "true" === preference.enableArticleUpdateHint ? $("#enableArticleUpdateHint").attr("checked", "checked") : $("#enableArticleUpdateHint").removeAttr("checked");
@@ -73,7 +71,6 @@ admin.preference = {
                 "true" === preference.commentable ? $("#commentable").attr("checked", "checked") : $("commentable").removeAttr("checked");
 
                 admin.preference.locale = preference.localeString;
-                admin.preference.editorType = preference.editorType;
 
                 // skin
                 $("#skinMain").data("skinDirName", preference.skinDirName);
@@ -86,11 +83,11 @@ admin.preference = {
                         selectedClass += " selected";
                     }
                     skinsHTML += "<div title='" + skins[i].skinDirName
-                        + "' class='left skinItem" + selectedClass + "'><img class='skinPreview' src='"
+                        + "' class='fn__left skinItem" + selectedClass + "'><img class='skinPreview' src='"
                         + latkeConfig.staticServePath + "/skins/" + skins[i].skinDirName
                         + "/preview.png'/><div>" + skins[i].skinName + "</div></div>";
                 }
-                $("#skinMain").append(skinsHTML + "<div class='clear'></div>");
+                $("#skinMain").append(skinsHTML + "<div class='fn__clear'></div>");
 
                 $(".skinItem").click(function () {
                     $(".skinItem").removeClass("selected");
@@ -105,30 +102,10 @@ admin.preference = {
                 }
 
                 $("#articleListDisplay").val(preference.articleListStyle);
-                $("#editorType").val(preference.editorType);
                 $("#feedOutputMode").val(preference.feedOutputMode);
                 $("#feedOutputCnt").val(preference.feedOutputCnt);
 
                 $("#loadMsg").text("");
-            }
-        });
-
-        $.ajax({
-            url: latkeConfig.servePath + "/console/preference/oss",
-            type: "GET",
-            cache: false,
-            success: function (result) {
-                if (!result.sc) {
-                    $("#tipMsg").text(result.msg);
-                    $("#loadMsg").text("");
-                    return;
-                }
-                //设置服务商信息
-                $('input[name=ossServer][value=' + result.oss.ossServer + ']')[0].checked = true
-                $("#ossAccessKey").val(result.oss.ossAccessKey);
-                $("#ossSecretKey").val(result.oss.ossSecretKey);
-                $("#ossDomain").val(result.oss.ossDomain);
-                $("#ossBucket").val(result.oss.ossBucket);
             }
         });
     },
@@ -222,10 +199,8 @@ admin.preference = {
                 "randomArticlesDisplayCount": $("#randomArticlesDisplayCount").val(),
                 "enableArticleUpdateHint": $("#enableArticleUpdateHint").prop("checked"),
                 "signs": signs,
-                "keyOfSolo": $("#keyOfSolo").val(),
                 "allowVisitDraftViaPermalink": $("#allowVisitDraftViaPermalink").prop("checked"),
                 "articleListStyle": $("#articleListDisplay").val(),
-                "editorType": $("#editorType").val(),
                 "feedOutputMode": $("#feedOutputMode").val(),
                 "feedOutputCnt": $("#feedOutputCnt").val(),
                 "commentable": $("#commentable").prop("checked"),
@@ -246,67 +221,11 @@ admin.preference = {
                     return;
                 }
 
-                if ($("#localeString").val() !== admin.preference.locale ||
-                    $("#editorType").val() !== admin.preference.editorType) {
+                if ($("#localeString").val() !== admin.preference.locale) {
                     window.location.reload();
                 }
 
-                // update article and preferences signs
-                for (var i = 1; i < signs.length; i++) {
-                    if ($("#articleSign" + signs[i].oId).length === 1) {
-                        $("#articleSign" + signs[i].oId).tip("option", "content",
-                            signs[i].signHTML === "" ? Label.signIsNullLabel : signs[i].signHTML.replace(/\n/g, "").replace(/<script.*<\/script>/ig, ""));
-                    }
-                }
-
                 $("#loadMsg").text("");
-            }
-        });
-    },
-    /*
-     * @description 更新 Oss 参数
-     */
-    updateOss: function () {
-        $("#tipMsg").text("");
-        $("#loadMsg").text(Label.loadingLabel);
-
-        var requestJSONObject = {
-            "ossServer": $('input[name=ossServer]:checked').val(),
-            "ossAccessKey": $("#ossAccessKey").val(),
-            "ossSecretKey": $("#ossSecretKey").val(),
-            "ossDomain": $("#ossDomain").val(),
-            "ossBucket": $("#ossBucket").val()
-        };
-
-        $.ajax({
-            url: latkeConfig.servePath + "/console/preference/oss",
-            type: "PUT",
-            cache: false,
-            data: JSON.stringify(requestJSONObject),
-            success: function (result) {
-                $("#tipMsg").html(result.msg);
-                $("#loadMsg").text("");
-            }
-        });
-    },
-
-    // 服务商radio change事件
-    ossServerChange: function () {
-        var ossServer = $('input[name=ossServer]:checked').val()
-        $.ajax({
-            url: latkeConfig.servePath + "/console/preference/oss?ossServer=" + ossServer,
-            type: "GET",
-            cache: false,
-            success: function (result) {
-                if (!result.sc) {
-                    $("#loadMsg").text("");
-                    $("#tipMsg").text(result.msg);
-                    return;
-                }
-                $("#ossAccessKey").val(result.oss.ossAccessKey);
-                $("#ossSecretKey").val(result.oss.ossSecretKey);
-                $("#ossDomain").val(result.oss.ossDomain);
-                $("#ossBucket").val(result.oss.ossBucket);
             }
         });
     }

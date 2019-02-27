@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
     <head>
@@ -135,6 +136,7 @@
                             </div>
                         </footer>
                         <@comments commentList=articleComments article=article></@comments>
+                        <br>
                         <div id="externalRelevantArticles" class="list"></div>
                         <div id="relevantArticles" class="list"></div>
                         <div id="randomArticles" class="list"></div>
@@ -144,7 +146,7 @@
             </div>
         </div>
         <#include "footer.ftl">
-        <@comment_script oId=article.oId>
+        <@comment_script oId=article.oId commentable=article.commentable>
         page.tips.externalRelevantArticlesDisplayCount = "${externalRelevantArticlesDisplayCount}";
         <#if 0 != randomArticlesDisplayCount>
         page.loadRandomArticles();

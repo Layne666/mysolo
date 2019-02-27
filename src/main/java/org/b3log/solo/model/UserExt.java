@@ -23,7 +23,7 @@ import org.apache.commons.lang.StringUtils;
  * This class defines ext of user model relevant keys.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.2.0.1, Jan 28, 2019
+ * @version 1.3.0.0, Feb 8, 2019
  * @see org.b3log.latke.model.User
  * @since 0.4.1
  */
@@ -45,10 +45,14 @@ public final class UserExt {
     public static final int MIN_USER_NAME_LENGTH = 1;
 
     /**
-     * Private constructor.
+     * Key of user B3 key.
      */
-    private UserExt() {
-    }
+    public static final String USER_B3_KEY = "userB3Key";
+
+    /**
+     * Key of GitHub open id.
+     */
+    public static final String USER_GITHUB_ID = "userGitHubId";
 
     /**
      * Checks whether the specified name is invalid.
@@ -82,5 +86,11 @@ public final class UserExt {
         }
 
         return StringUtils.containsIgnoreCase(name, "admin");
+    }
+
+    /**
+     * Private constructor.
+     */
+    private UserExt() {
     }
 }

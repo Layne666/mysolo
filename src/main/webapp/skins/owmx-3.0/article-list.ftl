@@ -33,7 +33,7 @@
     </sup>
     </#if>
 </h1>
-<div class="article-body">${article.articleAbstract}</div>
+<div class="content-reset">${article.articleAbstract}</div>
 <section class="meta">
     <p>
         ${author1Label}<a rel="nofollow" href="${servePath}/authors/${article.authorId}">${article.authorName}</a> |

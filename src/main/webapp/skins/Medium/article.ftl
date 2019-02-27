@@ -19,6 +19,7 @@
 -->
 <#include "macro-head.ftl">
 <#include "macro-comments.ftl">
+<#include "../../common-template/macro-comment_script.ftl">
 <!DOCTYPE html>
 <html>
 <head>
@@ -225,7 +226,7 @@
 <script type="text/javascript"
         src="${staticServePath}/skins/${skinDirName}/js/jquery.qrcode${miniPostfix}.js"></script>
 <#if pjax><!---- pjax {#pjax} start ----></#if>
-<@comment_script oId=article.oId>
+<@comment_script oId=article.oId commentable=article.commentable>
     Skin.initArticle()
     Skin.initComment = function (articleOId, articleTags) {
         page.tips.externalRelevantArticlesDisplayCount = "${externalRelevantArticlesDisplayCount}";

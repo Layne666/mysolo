@@ -1,6 +1,6 @@
 {
   "description": "Description of repository structures, for generation of the relational database table and persistence validation.",
-  "version": "3.2.1.2, Jan 28, 2019",
+  "version": "3.2.1.5, Feb 8, 2019",
   "authors": [
     "Liang Ding"
   ],
@@ -125,7 +125,7 @@
           "name": "commentContent",
           "description": "评论内容",
           "type": "String",
-          "length": 2000
+          "length": 2048
         },
         {
           "name": "commentCreated",
@@ -281,13 +281,6 @@
           "length": 255
         },
         {
-          "name": "pageEditorType",
-          "description": "页面编辑器类型，目前仅支持 CodeMirror-Markdown",
-          "type": "String",
-          "length": 20,
-          "nullable": true
-        },
-        {
           "name": "pageIcon",
           "description": "页面展示用小图标",
           "type": "String",
@@ -409,12 +402,6 @@
           "length": 255
         },
         {
-          "name": "userPassword",
-          "description": "用户密码，MD5",
-          "type": "String",
-          "length": 255
-        },
-        {
           "name": "userRole",
           "description": "用户角色，管理员：adminRole，普通用户：defaultRole，访客用户：visitorRole",
           "type": "String",
@@ -425,6 +412,18 @@
           "description": "用户头像图片链接地址",
           "type": "String",
           "length": 255
+        },
+        {
+          "name": "userB3Key",
+          "description": "B3log Key",
+          "type": "String",
+          "length": "64"
+        },
+        {
+          "name": "userGitHubId",
+          "description": "用户 GitHub Open Id",
+          "type": "String",
+          "length": 32
         }
       ]
     },
@@ -530,13 +529,6 @@
           "description": "文章浏览密码，留空为不设置访问密码",
           "type": "String",
           "legnth": 255
-        },
-        {
-          "name": "articleEditorType",
-          "description": "文章编辑器类型，目前仅支持 CodeMirror-Markdown",
-          "type": "String",
-          "length": 20,
-          "nullable": true
         }
       ]
     },

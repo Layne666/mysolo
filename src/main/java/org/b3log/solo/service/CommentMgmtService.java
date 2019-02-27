@@ -58,7 +58,7 @@ import java.util.Date;
  * Comment management service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.3.3.4, Jan 28, 2019
+ * @version 1.3.3.5, Feb 21, 2019
  * @since 0.3.5
  */
 @Service
@@ -315,15 +315,6 @@ public class CommentMgmtService {
                 return ret;
             }
 
-            final String commentEmail = requestJSONObject.getString(Comment.COMMENT_EMAIL).trim().toLowerCase();
-
-            if (!Strings.isEmail(commentEmail)) {
-                LOGGER.log(Level.WARN, "Comment email is invalid[{0}]", commentEmail);
-                ret.put(Keys.MSG, langPropsService.get("mailInvalidLabel"));
-
-                return ret;
-            }
-
             final String commentURL = requestJSONObject.optString(Comment.COMMENT_URL);
 
             if (!Strings.isURL(commentURL) || StringUtils.contains(commentURL, "<")) {
@@ -468,7 +459,7 @@ public class CommentMgmtService {
             final JSONObject eventData = new JSONObject();
             eventData.put(Comment.COMMENT, comment);
             eventData.put(Page.PAGE, page);
-            eventManager.fireEventSynchronously(new Event<>(EventTypes.ADD_COMMENT_TO_PAGE, eventData));
+            eventManager.fireEventAsynchronously(new Event<>(EventTypes.ADD_COMMENT_TO_PAGE, eventData));
 
             transaction.commit();
         } catch (final Exception e) {
@@ -600,7 +591,7 @@ public class CommentMgmtService {
             final JSONObject eventData = new JSONObject();
             eventData.put(Comment.COMMENT, comment);
             eventData.put(Article.ARTICLE, article);
-            eventManager.fireEventSynchronously(new Event<>(EventTypes.ADD_COMMENT_TO_ARTICLE, eventData));
+            eventManager.fireEventAsynchronously(new Event<>(EventTypes.ADD_COMMENT_TO_ARTICLE, eventData));
 
             transaction.commit();
         } catch (final Exception e) {

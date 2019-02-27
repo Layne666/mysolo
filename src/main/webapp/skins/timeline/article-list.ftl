@@ -45,7 +45,7 @@
                     </sup>
                     </#if>
                 </h3>
-                <div class="article-body">
+                <div class="content-reset">
                     ${article.articleAbstract}
                 </div>
                 <span class="ico-tags ico" title="${tagLabel}">
