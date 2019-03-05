@@ -47,6 +47,6 @@
         <#include "footer.ftl">
         </div>
         <#include "audio.ftl">
-        <@comment_script oId=page.oId></@comment_script>
+       <@comment_script oId=page.oId commentable=page.commentable></@comment_script>
     </body>
 </html>
