@@ -85,7 +85,7 @@
         <emoji-java.version>4.0.0</emoji-java.version>
         <jodd.version>5.0.3</jodd.version>
         <owasp.version>1.2.2</owasp.version>
-        <snakeyaml.version>1.18</snakeyaml.version>
+        <snakeyaml.version>1.32</snakeyaml.version>
         <freemarker.version>2.3.28</freemarker.version>
         <user-agent-utils.version>1.21</user-agent-utils.version>
         <servlet.version>3.1.0</servlet.version>
